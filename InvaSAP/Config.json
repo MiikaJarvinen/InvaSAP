@@ -1,0 +1,237 @@
+{
+  "Toimintolajit": {
+    "FO0110": "Arkipäivä",
+    "FO0111": "Ennakkohuolto",
+    "FO0112": "Ylityö"
+  },
+  "Prioriteetit": {
+    "1": "Kriittinen",
+    "2": "Korkea",
+    "3": "Normaali",
+    "4": "Matala"
+  },
+  "Tilauslajit": {
+    "ZHK0": "Korjaava, henkilöstä johtuva",
+    "ZHK1": "Korjaava",
+    "ZHK2": "Ennakoiva",
+    "ZHK3": "Aloite",
+    "ZHK4": "Parantava",
+    "ZHK5": "Tuotantoa tukeva",
+    "ZHK6": "Työturvallisuus",
+    "ZHK9": "Tuoteturvallisuus",
+    "ZHKE": "Eläinten hyvinvointi"
+  },
+  "Jarjestelmatilat": {
+    "0": "Selvityksessä/suunnittelussa",
+    "1": "Aloitettu",
+    "2": "Odottaa ajankohtaa",
+    "3": "Odottaa varaosaa",
+    "4": "Odottaa asiantuntijaa",
+    "5": "Odottaa tarkastusta/hyväksyntää",
+    "6": "Valmis",
+    "7": "Peruttu",
+    "8": "Siirretty huollon yhteyteen",
+    "9": "Siirretty uudelle tilaukselle",
+    "E": "Ei tehty"
+  },
+  "Kayttajat": [
+    {
+      "id": 107070,
+      "name": "Igor Vasylenko",
+      "show": true
+    },
+    {
+      "id": 107071,
+      "name": "Juho Ylitalo",
+      "show": true
+    },
+    {
+      "id": 107072,
+      "name": "Matias Saarinen",
+      "show": true
+    },
+    {
+      "id": 107073,
+      "name": "Anssi Salomaa",
+      "show": true
+    },
+    {
+      "id": 107076,
+      "name": "Jari Sunell",
+      "show": true
+    },
+    {
+      "id": 107069,
+      "name": "Severi Rantanen",
+      "show": true
+    },
+    {
+      "id": 107077,
+      "name": "Niklas Sillanpää",
+      "show": true
+    },
+    {
+      "id": 107002,
+      "name": "Timo Alen",
+      "show": true
+    },
+    {
+      "id": 107007,
+      "name": "Sami Kimolin",
+      "show": true
+    },
+    {
+      "id": 107008,
+      "name": "Hannu Laine",
+      "show": true
+    },
+    {
+      "id": 107009,
+      "name": "Tommi Lahtinen",
+      "show": true
+    },
+    {
+      "id": 107013,
+      "name": "Olli Routakangas",
+      "show": true
+    },
+    {
+      "id": 107015,
+      "name": "Kim Rönnqvist",
+      "show": true
+    },
+    {
+      "id": 107016,
+      "name": "Juhani Sillanpää",
+      "show": true
+    },
+    {
+      "id": 107019,
+      "name": "Ari Nissilä",
+      "show": true
+    },
+    {
+      "id": 107021,
+      "name": "Pasi Sundell",
+      "show": true
+    },
+    {
+      "id": 107027,
+      "name": "Marko Huhtala",
+      "show": true
+    },
+    {
+      "id": 107029,
+      "name": "Juha Hämäläinen",
+      "show": true
+    },
+    {
+      "id": 107030,
+      "name": "Pasi Korpela",
+      "show": true
+    },
+    {
+      "id": 107031,
+      "name": "Markus Kutila",
+      "show": true
+    },
+    {
+      "id": 107033,
+      "name": "Jarno Kemppainen",
+      "show": true
+    },
+    {
+      "id": 107035,
+      "name": "Kimmo Ekqvist",
+      "show": true
+    },
+    {
+      "id": 107037,
+      "name": "Miika Järvinen",
+      "show": true
+    },
+    {
+      "id": 107039,
+      "name": "Mikko Freese",
+      "show": true
+    },
+    {
+      "id": 107041,
+      "name": "Perttu Viljanen",
+      "show": true
+    },
+    {
+      "id": 107046,
+      "name": "Santeri Alen",
+      "show": true
+    },
+    {
+      "id": 111958,
+      "name": "Jukka Aaltonen",
+      "show": true
+    },
+    {
+      "id": 111962,
+      "name": "Juho Järvinen",
+      "show": true
+    },
+    {
+      "id": 107048,
+      "name": "Ari Hannu",
+      "show": true
+    },
+    {
+      "id": 107049,
+      "name": "Riku Hurmerinta",
+      "show": true
+    },
+    {
+      "id": 111839,
+      "name": "Marko Korjula",
+      "show": true
+    },
+    {
+      "id": 107054,
+      "name": "Ari Kauti",
+      "show": true
+    },
+    {
+      "id": 111841,
+      "name": "Joni Siro",
+      "show": true
+    },
+    {
+      "id": 107058,
+      "name": "Timo Kankare",
+      "show": true
+    },
+    {
+      "id": 107061,
+      "name": "Tomi Piipponen",
+      "show": true
+    },
+    {
+      "id": 107062,
+      "name": "Henri Pekurinen",
+      "show": true
+    },
+    {
+      "id": 107063,
+      "name": "Niko Metsänoja",
+      "show": true
+    },
+    {
+      "id": 107064,
+      "name": "Antti Freese",
+      "show": true
+    },
+    {
+      "id": 107066,
+      "name": "Tuomas Seppälä",
+      "show": true
+    }
+  ],
+  "AvoimetTyotVariantti": "/KUPITIL",
+  "Toimipaikka":  "7010"
+}
+
