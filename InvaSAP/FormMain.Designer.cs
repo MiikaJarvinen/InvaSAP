@@ -1296,7 +1296,7 @@
             Icon = (Icon)resources.GetObject("$this.Icon");
             MinimumSize = new Size(1000, 700);
             Name = "FormMain";
-            Text = "SAP Assistant";
+            Text = "InvaSAP";
             tabControlMain.ResumeLayout(false);
             tabLuoTyotilaus.ResumeLayout(false);
             splitContainerLuoTyotilaus.Panel1.ResumeLayout(false);

@@ -17,16 +17,30 @@ namespace InvaSAP
 
     public partial class FormMain : Form
     {
-        // Windowsin ikkunoiden hallintaan liittyvää. Käytetään tulostusikkunan avautumisen tunnistukseen ja siinä OK-painikkeen painamiseen.
+        // Windowsin ikkunoiden hallintaan liittyvää.
+        [DllImport("user32.dll")]
+        private static extern IntPtr FindWindow(string lpClassName, string lpWindowName);
         [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
         private static extern IntPtr FindWindowEx(IntPtr hwndParent, IntPtr hwndChildAfter, string lpszClass, string lpszWindow);
         [DllImport("user32.dll")]
         private static extern IntPtr SendMessage(IntPtr hWnd, int Msg, IntPtr wParam, IntPtr lParam);
         private const int BM_CLICK = 0x00F5;
 
+        private const int SW_NORMAL = 1;
         private const int SW_SHOWMINIMIZED = 2;
+        private const int SW_RESTORE = 9;
+        private const uint SWP_SHOWWINDOW = 0x0001;
+        private static readonly IntPtr HWND_TOP = new IntPtr(0);
+
         [DllImport("user32.dll")]
         private static extern bool ShowWindowAsync(IntPtr hWnd, int nCmdShow);
+        [DllImport("user32.dll")]
+        private static extern bool SetForegroundWindow(IntPtr hWnd);
+        [DllImport("user32.dll")]
+        private static extern bool SetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter, int X, int Y, int cx, int cy, uint uFlags);
+        [DllImport("user32.dll")]
+        private static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
+
 
         // Käyttäjäluokka LiteDB-tietokantaa varten.
         public class User
@@ -99,10 +113,16 @@ namespace InvaSAP
         }
         public FormMain()
         {
-            InitializeComponent();
-
-
+            // Lataa Config.json:sta oletusarvoja
             LoadDefaultDataFromJSON();
+
+            // Paikallinen LiteDB-tietokanta.
+            string path = Application.StartupPath + "\\InvaSAP Database.db";
+            Properties.Settings.Default.Tietokantapolku = @"Filename=" + path + ";Collation=fi-FI";
+            Properties.Settings.Default.Save();
+
+
+            InitializeComponent();
 
             // Lisää Windowsin eventhandler, jolla tunnistetaan avautuvat ikkunat, koska
             // SAPin aukaisema tulostuksen pikkuikkuna ei ole SAP-ikkuna vaan Windowsin.
@@ -132,10 +152,6 @@ namespace InvaSAP
                 tbAsetuksetToimipaikka.Text = Properties.Settings.Default.Toimipaikka;
 
 
-            // Paikallinen LiteDB-tietokanta.
-            string path = Application.StartupPath + "\\SAP Assistant Database.db";
-            Properties.Settings.Default.Tietokantapolku = @"Filename=" + path + ";Collation=fi-FI";
-            Properties.Settings.Default.Save();
 
             using var db = new LiteDatabase(Properties.Settings.Default.Tietokantapolku);
 
@@ -1107,28 +1123,10 @@ namespace InvaSAP
             newRow.Cells["unit"].Value = "KPL";
         }
 
-        [DllImport("user32.dll")]
-        private static extern IntPtr FindWindow(string lpClassName, string lpWindowName);
-        [DllImport("user32.dll")]
-        private static extern bool SetForegroundWindow(IntPtr hWnd);
-        [DllImport("user32.dll")]
-        private static extern bool SetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter, int X, int Y, int cx, int cy, uint uFlags);
-        private const uint SWP_SHOWWINDOW = 0x0001;
-        private static readonly IntPtr HWND_TOP = new IntPtr(0);
-        [DllImport("user32.dll")]
-        private static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
-
-        private const int SW_NORMAL = 1;
-        private const int SW_RESTORE = 9;
 
         private async void button1_Click(object sender, EventArgs e)
         {
             await SAP.Open();
-            IntPtr windowHandle = FindWindow(null, SAP.GetActiveWindowName());
-            ShowWindow(windowHandle, SW_RESTORE);
-            SetWindowPos(windowHandle, HWND_TOP, this.Left, this.Top, this.Width, this.Height, 0);
-            SetForegroundWindow(windowHandle);
-            this.BringToFront();
         }
 
 
