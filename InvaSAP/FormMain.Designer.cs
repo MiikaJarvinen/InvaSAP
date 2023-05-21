@@ -90,9 +90,24 @@
             dataGridViewTextBoxColumn1 = new DataGridViewTextBoxColumn();
             count = new DataGridViewTextBoxColumn();
             unit = new DataGridViewComboBoxColumn();
+            tabKirjaaPaiva = new TabPage();
+            splitContainerKirjaaPaiva = new SplitContainer();
+            btnKirjaaPaiva = new Button();
+            cbKirjaaPaivaHenkilo = new ComboBox();
+            label32 = new Label();
+            dgKirjaaPaiva = new DataGridView();
+            dataGridViewTextBoxColumn2 = new DataGridViewTextBoxColumn();
+            Tunnit = new DataGridViewTextBoxColumn();
+            Vahvistusteksti = new DataGridViewTextBoxColumn();
+            Loppuvahvistus = new DataGridViewCheckBoxColumn();
+            Toimintolaji = new DataGridViewComboBoxColumn();
             tabAvoimetTyot = new TabPage();
             splitContainerAvoimetTyot = new SplitContainer();
             dgOpenWorkOrders = new DataGridView();
+            Tyonumero = new DataGridViewTextBoxColumn();
+            Kuvaus = new DataGridViewTextBoxColumn();
+            Laite = new DataGridViewTextBoxColumn();
+            Laitekuvaus = new DataGridViewTextBoxColumn();
             btnKirjaaTunteja = new Button();
             tbOpenWorkOrdersFunctionalLocation = new TextBox();
             label17 = new Label();
@@ -150,6 +165,12 @@
             splitContainerKirjaaTunteja.SuspendLayout();
             groupBox5.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)dgVaraosienPoisto).BeginInit();
+            tabKirjaaPaiva.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)splitContainerKirjaaPaiva).BeginInit();
+            splitContainerKirjaaPaiva.Panel1.SuspendLayout();
+            splitContainerKirjaaPaiva.Panel2.SuspendLayout();
+            splitContainerKirjaaPaiva.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)dgKirjaaPaiva).BeginInit();
             tabAvoimetTyot.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)splitContainerAvoimetTyot).BeginInit();
             splitContainerAvoimetTyot.Panel1.SuspendLayout();
@@ -178,6 +199,7 @@
             // 
             tabControlMain.Controls.Add(tabLuoTyotilaus);
             tabControlMain.Controls.Add(tabKirjaaTunteja);
+            tabControlMain.Controls.Add(tabKirjaaPaiva);
             tabControlMain.Controls.Add(tabAvoimetTyot);
             tabControlMain.Controls.Add(tabAsetukset);
             tabControlMain.Dock = DockStyle.Fill;
@@ -808,6 +830,106 @@
             unit.SortMode = DataGridViewColumnSortMode.Automatic;
             unit.Width = 72;
             // 
+            // tabKirjaaPaiva
+            // 
+            tabKirjaaPaiva.Controls.Add(splitContainerKirjaaPaiva);
+            tabKirjaaPaiva.Location = new Point(4, 24);
+            tabKirjaaPaiva.Name = "tabKirjaaPaiva";
+            tabKirjaaPaiva.Padding = new Padding(3);
+            tabKirjaaPaiva.Size = new Size(976, 633);
+            tabKirjaaPaiva.TabIndex = 4;
+            tabKirjaaPaiva.Text = "Kirjaa päivä";
+            tabKirjaaPaiva.UseVisualStyleBackColor = true;
+            // 
+            // splitContainerKirjaaPaiva
+            // 
+            splitContainerKirjaaPaiva.Dock = DockStyle.Fill;
+            splitContainerKirjaaPaiva.FixedPanel = FixedPanel.Panel1;
+            splitContainerKirjaaPaiva.Location = new Point(3, 3);
+            splitContainerKirjaaPaiva.Name = "splitContainerKirjaaPaiva";
+            splitContainerKirjaaPaiva.Orientation = Orientation.Horizontal;
+            // 
+            // splitContainerKirjaaPaiva.Panel1
+            // 
+            splitContainerKirjaaPaiva.Panel1.Controls.Add(btnKirjaaPaiva);
+            splitContainerKirjaaPaiva.Panel1.Controls.Add(cbKirjaaPaivaHenkilo);
+            splitContainerKirjaaPaiva.Panel1.Controls.Add(label32);
+            // 
+            // splitContainerKirjaaPaiva.Panel2
+            // 
+            splitContainerKirjaaPaiva.Panel2.Controls.Add(dgKirjaaPaiva);
+            splitContainerKirjaaPaiva.Size = new Size(970, 627);
+            splitContainerKirjaaPaiva.SplitterDistance = 72;
+            splitContainerKirjaaPaiva.TabIndex = 27;
+            // 
+            // btnKirjaaPaiva
+            // 
+            btnKirjaaPaiva.Location = new Point(778, 14);
+            btnKirjaaPaiva.Name = "btnKirjaaPaiva";
+            btnKirjaaPaiva.Size = new Size(187, 41);
+            btnKirjaaPaiva.TabIndex = 26;
+            btnKirjaaPaiva.Text = "Tallenna";
+            btnKirjaaPaiva.UseVisualStyleBackColor = true;
+            btnKirjaaPaiva.Click += btnKirjaaPaiva_Click;
+            // 
+            // cbKirjaaPaivaHenkilo
+            // 
+            cbKirjaaPaivaHenkilo.FormattingEnabled = true;
+            cbKirjaaPaivaHenkilo.Location = new Point(75, 14);
+            cbKirjaaPaivaHenkilo.Name = "cbKirjaaPaivaHenkilo";
+            cbKirjaaPaivaHenkilo.Size = new Size(156, 23);
+            cbKirjaaPaivaHenkilo.TabIndex = 24;
+            // 
+            // label32
+            // 
+            label32.AutoSize = true;
+            label32.Location = new Point(18, 17);
+            label32.Name = "label32";
+            label32.Size = new Size(51, 15);
+            label32.TabIndex = 25;
+            label32.Text = "Henkilö:";
+            // 
+            // dgKirjaaPaiva
+            // 
+            dgKirjaaPaiva.BackgroundColor = SystemColors.Window;
+            dgKirjaaPaiva.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            dgKirjaaPaiva.Columns.AddRange(new DataGridViewColumn[] { dataGridViewTextBoxColumn2, Tunnit, Vahvistusteksti, Loppuvahvistus, Toimintolaji });
+            dgKirjaaPaiva.Dock = DockStyle.Fill;
+            dgKirjaaPaiva.GridColor = SystemColors.ButtonShadow;
+            dgKirjaaPaiva.Location = new Point(0, 0);
+            dgKirjaaPaiva.Name = "dgKirjaaPaiva";
+            dgKirjaaPaiva.RowHeadersBorderStyle = DataGridViewHeaderBorderStyle.Single;
+            dgKirjaaPaiva.RowTemplate.Height = 25;
+            dgKirjaaPaiva.SelectionMode = DataGridViewSelectionMode.CellSelect;
+            dgKirjaaPaiva.Size = new Size(970, 551);
+            dgKirjaaPaiva.TabIndex = 26;
+            // 
+            // dataGridViewTextBoxColumn2
+            // 
+            dataGridViewTextBoxColumn2.HeaderText = "Työnumero";
+            dataGridViewTextBoxColumn2.Name = "dataGridViewTextBoxColumn2";
+            // 
+            // Tunnit
+            // 
+            Tunnit.HeaderText = "Tuntimäärä";
+            Tunnit.Name = "Tunnit";
+            // 
+            // Vahvistusteksti
+            // 
+            Vahvistusteksti.AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
+            Vahvistusteksti.HeaderText = "Vahvistusteksti";
+            Vahvistusteksti.Name = "Vahvistusteksti";
+            // 
+            // Loppuvahvistus
+            // 
+            Loppuvahvistus.HeaderText = "Loppuvahvistus";
+            Loppuvahvistus.Name = "Loppuvahvistus";
+            // 
+            // Toimintolaji
+            // 
+            Toimintolaji.HeaderText = "Toimintolaji";
+            Toimintolaji.Name = "Toimintolaji";
+            // 
             // tabAvoimetTyot
             // 
             tabAvoimetTyot.Controls.Add(splitContainerAvoimetTyot);
@@ -854,6 +976,7 @@
             dgOpenWorkOrders.BackgroundColor = SystemColors.Window;
             dgOpenWorkOrders.BorderStyle = BorderStyle.None;
             dgOpenWorkOrders.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            dgOpenWorkOrders.Columns.AddRange(new DataGridViewColumn[] { Tyonumero, Kuvaus, Laite, Laitekuvaus });
             dgOpenWorkOrders.Dock = DockStyle.Fill;
             dgOpenWorkOrders.Location = new Point(0, 0);
             dgOpenWorkOrders.Name = "dgOpenWorkOrders";
@@ -866,6 +989,41 @@
             dgOpenWorkOrders.TabStop = false;
             dgOpenWorkOrders.CellContentDoubleClick += DataGridViewOpenWorkOrders_CellDoubleClick;
             dgOpenWorkOrders.CellDoubleClick += DataGridViewOpenWorkOrders_CellDoubleClick;
+            // 
+            // Tyonumero
+            // 
+            Tyonumero.AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells;
+            Tyonumero.DataPropertyName = "id";
+            Tyonumero.HeaderText = "Työnumero";
+            Tyonumero.Name = "Tyonumero";
+            Tyonumero.ReadOnly = true;
+            Tyonumero.Width = 92;
+            // 
+            // Kuvaus
+            // 
+            Kuvaus.AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
+            Kuvaus.DataPropertyName = "kuvaus";
+            Kuvaus.HeaderText = "Työkuvaus";
+            Kuvaus.Name = "Kuvaus";
+            Kuvaus.ReadOnly = true;
+            // 
+            // Laite
+            // 
+            Laite.AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells;
+            Laite.DataPropertyName = "laite";
+            Laite.HeaderText = "Laite";
+            Laite.Name = "Laite";
+            Laite.ReadOnly = true;
+            Laite.Width = 57;
+            // 
+            // Laitekuvaus
+            // 
+            Laitekuvaus.AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells;
+            Laitekuvaus.DataPropertyName = "laiteKuvaus";
+            Laitekuvaus.HeaderText = "Laitekuvaus";
+            Laitekuvaus.Name = "Laitekuvaus";
+            Laitekuvaus.ReadOnly = true;
+            Laitekuvaus.Width = 94;
             // 
             // btnKirjaaTunteja
             // 
@@ -1317,6 +1475,13 @@
             splitContainerKirjaaTunteja.ResumeLayout(false);
             groupBox5.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)dgVaraosienPoisto).EndInit();
+            tabKirjaaPaiva.ResumeLayout(false);
+            splitContainerKirjaaPaiva.Panel1.ResumeLayout(false);
+            splitContainerKirjaaPaiva.Panel1.PerformLayout();
+            splitContainerKirjaaPaiva.Panel2.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)splitContainerKirjaaPaiva).EndInit();
+            splitContainerKirjaaPaiva.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)dgKirjaaPaiva).EndInit();
             tabAvoimetTyot.ResumeLayout(false);
             splitContainerAvoimetTyot.Panel1.ResumeLayout(false);
             splitContainerAvoimetTyot.Panel2.ResumeLayout(false);
@@ -1453,5 +1618,20 @@
         private TextBox tbAsetuksetVariantti;
         private Label label31;
         private TextBox tbAsetuksetToimipaikka;
+        private DataGridViewTextBoxColumn Tyonumero;
+        private DataGridViewTextBoxColumn Kuvaus;
+        private DataGridViewTextBoxColumn Laite;
+        private DataGridViewTextBoxColumn Laitekuvaus;
+        private TabPage tabKirjaaPaiva;
+        private SplitContainer splitContainerKirjaaPaiva;
+        private Button btnKirjaaPaiva;
+        private ComboBox cbKirjaaPaivaHenkilo;
+        private Label label32;
+        private DataGridView dgKirjaaPaiva;
+        private DataGridViewTextBoxColumn dataGridViewTextBoxColumn2;
+        private DataGridViewTextBoxColumn Tunnit;
+        private DataGridViewTextBoxColumn Vahvistusteksti;
+        private DataGridViewCheckBoxColumn Loppuvahvistus;
+        private DataGridViewComboBoxColumn Toimintolaji;
     }
 }

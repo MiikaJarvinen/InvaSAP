@@ -103,11 +103,11 @@ namespace InvaSAP
             string json = File.ReadAllText("Config.json");
             var data = JsonConvert.DeserializeObject<Dictionary<string, object>>(json);
 
-            Toimintolajit = JsonConvert.DeserializeObject<Dictionary<string, string>>(data["Toimintolajit"].ToString()) ?? new Dictionary<string, string>();
-            Prioriteetit = JsonConvert.DeserializeObject<Dictionary<string, string>>(data["Prioriteetit"].ToString()) ?? new Dictionary<string, string>();
-            Tilauslajit = JsonConvert.DeserializeObject<Dictionary<string, string>>(data["Tilauslajit"].ToString()) ?? new Dictionary<string, string>();
-            Jarjestelmatilat = JsonConvert.DeserializeObject<Dictionary<string, string>>(data["Jarjestelmatilat"].ToString()) ?? new Dictionary<string, string>();
-            Kayttajat = JsonConvert.DeserializeObject<List<User>>(data["Kayttajat"].ToString()) ?? new List<User> { };
+            Toimintolajit = JsonConvert.DeserializeObject<Dictionary<string, string>>(data["Toimintolajit"].ToString() ?? string.Empty) ?? new Dictionary<string, string>();
+            Prioriteetit = JsonConvert.DeserializeObject<Dictionary<string, string>>(data["Prioriteetit"].ToString() ?? string.Empty) ?? new Dictionary<string, string>();
+            Tilauslajit = JsonConvert.DeserializeObject<Dictionary<string, string>>(data["Tilauslajit"].ToString() ?? string.Empty) ?? new Dictionary<string, string>();
+            Jarjestelmatilat = JsonConvert.DeserializeObject<Dictionary<string, string>>(data["Jarjestelmatilat"].ToString() ?? string.Empty) ?? new Dictionary<string, string>();
+            Kayttajat = JsonConvert.DeserializeObject<List<User>>(data["Kayttajat"].ToString() ?? string.Empty) ?? new List<User> { };
             AvoimetTyotVariantti = JsonConvert.DeserializeObject<dynamic>(json).AvoimetTyotVariantti.ToString() ?? "/KUPITIL";
             Toimipaikka = JsonConvert.DeserializeObject<dynamic>(json).Toimipaikka.ToString() ?? "7010";
         }
@@ -166,6 +166,8 @@ namespace InvaSAP
                 // Päivitä Asetukset-tabin käyttäjälista.
                 dgUsers.DataSource = db.GetCollection<User>("users").FindAll().ToList();
                 dgUsers.Refresh();
+
+                // TODO: Sama homma KirjaaPäivä
             }
 
             // Hae laitepuusolmut tietokannasta ja kasaa puu GUI:ssa
@@ -188,12 +190,7 @@ namespace InvaSAP
             tbLoppuaika.Text = "00:00:00";
 
             // Täytä Avoimet työtilaukset listanäkymä töillä tietokannasta.
-            dgOpenWorkOrders.DataSource = db.GetCollection<OpenWorkOrder>("openworkorders").FindAll().ToList();
-            dgOpenWorkOrders.Columns["id"].HeaderText = "Työnumero";
-            dgOpenWorkOrders.Columns["kuvaus"].HeaderText = "Kuvaus";
-            dgOpenWorkOrders.Columns["laite"].HeaderText = "Laite ID";
-            dgOpenWorkOrders.Columns["laiteKuvaus"].HeaderText = "Laite";
-            dgOpenWorkOrders.Refresh();
+            dgOpenWorkOrders.DataSource = db.GetCollection<OpenWorkOrder>("openworkorders").FindAll().OrderByDescending(o => o.id).ToList();
 
             // Täytä pudotusvalikot
             var toimintolajit = Toimintolajit.Select(x => new { DisplayText = $"{x.Key} {x.Value}", Value = x.Key }).ToList();
@@ -476,15 +473,9 @@ namespace InvaSAP
 
                 // Tulostaa vai eikö tulostaa?
                 if (print)
-                {
-                    // Tulostusnappi
-                    SAP.PressButton("btn[86]"); //wnd[0]/tbar[0]/btn[86]
-                }
+                    SAP.PressButton("btn[86]"); // Tulostusnappi
                 else
-                {
-                    // Tallennusnappi
-                    SAP.PressButton("btn[11]"); //wnd[0]/tbar[0]/btn[11]
-                }
+                    SAP.PressButton("btn[11]"); // Tallennusnappi
 
                 // Siivotaan Luo työtilaus-lomake
                 ClearFormCreateWorkOrder();
@@ -1176,6 +1167,14 @@ namespace InvaSAP
         {
             Properties.Settings.Default.Toimipaikka = tbAsetuksetToimipaikka.Text.Trim();
             Properties.Settings.Default.Save();
+        }
+
+        private void btnKirjaaPaiva_Click(object sender, EventArgs e)
+        {
+            // TODO: Kenttien max pituus
+            // TODO: toimintolaji, kopioit kirjaa tunnit
+            // TODO: henkilöt, kopioi kirjaa tunnit
+            // TODO: luo tuntimäärä -> kellonajat, ja muista mitkä on käytetty
         }
     }
 }
