@@ -202,6 +202,14 @@ namespace InvaSAP
             cbKirjaaTuntejaToimintolaji.DisplayMember = "DisplayText";
             cbKirjaaTuntejaToimintolaji.ValueMember = "Value";
 
+            DataGridViewComboBoxColumn comboColumn = (DataGridViewComboBoxColumn)dgKirjaaPaiva.Columns["Toimintolaji"];
+            comboColumn.DisplayMember = "Value";
+            comboColumn.ValueMember = "Key";
+            var displayItems = Toimintolajit.ToDictionary(kvp => kvp.Key, kvp => $"{kvp.Value} {kvp.Key}");
+            comboColumn.DataSource = new BindingSource(displayItems, null);
+            string defaultValue = displayItems.Values.First();
+            comboColumn.DefaultCellStyle.NullValue = defaultValue;
+
             cbPrioriteetti.DisplayMember = "DisplayText";
             cbPrioriteetti.ValueMember = "Value";
             cbPrioriteetti.DataSource = Prioriteetit.Select(x => new { DisplayText = $"{x.Key} {x.Value}", Value = x.Key }).ToList();

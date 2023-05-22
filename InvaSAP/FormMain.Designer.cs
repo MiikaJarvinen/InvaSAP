@@ -96,11 +96,6 @@
             cbKirjaaPaivaHenkilo = new ComboBox();
             label32 = new Label();
             dgKirjaaPaiva = new DataGridView();
-            dataGridViewTextBoxColumn2 = new DataGridViewTextBoxColumn();
-            Tunnit = new DataGridViewTextBoxColumn();
-            Vahvistusteksti = new DataGridViewTextBoxColumn();
-            Loppuvahvistus = new DataGridViewCheckBoxColumn();
-            Toimintolaji = new DataGridViewComboBoxColumn();
             tabAvoimetTyot = new TabPage();
             splitContainerAvoimetTyot = new SplitContainer();
             dgOpenWorkOrders = new DataGridView();
@@ -148,6 +143,11 @@
             tbLog = new TextBox();
             btnHaeLaitepuu = new Button();
             btnResetUsers = new Button();
+            dataGridViewTextBoxColumn2 = new DataGridViewTextBoxColumn();
+            Tunnit = new DataGridViewTextBoxColumn();
+            Vahvistusteksti = new DataGridViewTextBoxColumn();
+            Loppuvahvistus = new DataGridViewCheckBoxColumn();
+            Toimintolaji = new DataGridViewComboBoxColumn();
             tabControlMain.SuspendLayout();
             tabLuoTyotilaus.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)splitContainerLuoTyotilaus).BeginInit();
@@ -904,32 +904,6 @@
             dgKirjaaPaiva.Size = new Size(970, 551);
             dgKirjaaPaiva.TabIndex = 26;
             // 
-            // dataGridViewTextBoxColumn2
-            // 
-            dataGridViewTextBoxColumn2.HeaderText = "Työnumero";
-            dataGridViewTextBoxColumn2.Name = "dataGridViewTextBoxColumn2";
-            // 
-            // Tunnit
-            // 
-            Tunnit.HeaderText = "Tuntimäärä";
-            Tunnit.Name = "Tunnit";
-            // 
-            // Vahvistusteksti
-            // 
-            Vahvistusteksti.AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
-            Vahvistusteksti.HeaderText = "Vahvistusteksti";
-            Vahvistusteksti.Name = "Vahvistusteksti";
-            // 
-            // Loppuvahvistus
-            // 
-            Loppuvahvistus.HeaderText = "Loppuvahvistus";
-            Loppuvahvistus.Name = "Loppuvahvistus";
-            // 
-            // Toimintolaji
-            // 
-            Toimintolaji.HeaderText = "Toimintolaji";
-            Toimintolaji.Name = "Toimintolaji";
-            // 
             // tabAvoimetTyot
             // 
             tabAvoimetTyot.Controls.Add(splitContainerAvoimetTyot);
@@ -1443,6 +1417,34 @@
             btnResetUsers.Text = "Resetoi käyttäjälistaus";
             btnResetUsers.UseVisualStyleBackColor = true;
             btnResetUsers.Click += btnResetUsers_Click;
+            // 
+            // dataGridViewTextBoxColumn2
+            // 
+            dataGridViewTextBoxColumn2.HeaderText = "Työnumero";
+            dataGridViewTextBoxColumn2.Name = "dataGridViewTextBoxColumn2";
+            // 
+            // Tunnit
+            // 
+            Tunnit.HeaderText = "Tuntimäärä";
+            Tunnit.Name = "Tunnit";
+            // 
+            // Vahvistusteksti
+            // 
+            Vahvistusteksti.AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
+            Vahvistusteksti.HeaderText = "Vahvistusteksti";
+            Vahvistusteksti.Name = "Vahvistusteksti";
+            // 
+            // Loppuvahvistus
+            // 
+            Loppuvahvistus.HeaderText = "Loppuvahvistus";
+            Loppuvahvistus.Name = "Loppuvahvistus";
+            // 
+            // Toimintolaji
+            // 
+            Toimintolaji.HeaderText = "Toimintolaji";
+            Toimintolaji.MinimumWidth = 130;
+            Toimintolaji.Name = "Toimintolaji";
+            Toimintolaji.Width = 130;
             // 
             // FormMain
             // 
