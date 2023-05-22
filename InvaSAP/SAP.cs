@@ -97,6 +97,12 @@ namespace InvaSAP
             }
             return obj;
         }
+        // Lue statusbarista tila ja viesti
+        public static string[] GetStatusBarInfo()
+        {
+            GuiStatusbar statusbar = (GuiStatusbar)GetNodeById("/sbar");
+            return new string[] { statusbar.MessageType, statusbar.Text };
+        }
         // Valitse tabi SAP GUI:ssa
         public static void SelectTab(string guiElement)
         {
@@ -183,7 +189,7 @@ namespace InvaSAP
                 if (SapApplication.Connections.Count == 0)
                 {
                     string connectString = Properties.Settings.Default.SapKirjautuminenYhteys;
-                    SapConnection = SapApplication.OpenConnection(connectString, Sync: true);
+                    SapConnection = SapApplication.OpenConnection(connectString, Sync: true); // TODO: try catch jos käyttäjä syöttänyt olemattoman yhteyden
                     Debug.WriteLine("SAP.DetectConnection - SapConnection created");
                     SapSession = (GuiSession)SapConnection.Sessions.Item(0);
                     Debug.WriteLine("SAP.DetectConnection - SapSession created");

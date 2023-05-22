@@ -1,16 +1,10 @@
 ﻿using LiteDB;
+using Newtonsoft.Json;
 using SAPFEWSELib;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using System.Windows.Automation;
-using System.Collections.Generic;
-using Newtonsoft.Json;
-using System.IO;
-using System.Windows.Forms;
-using System.Text;
-using System;
-using InvaSAP;
 
 namespace InvaSAP
 {
@@ -100,7 +94,11 @@ namespace InvaSAP
         private static string Toimipaikka;
         public static void LoadDefaultDataFromJSON()
         {
-            string json = File.ReadAllText("Config.json");
+            string filePath = "Config.json";
+            if (!File.Exists(filePath))
+                File.WriteAllText(filePath, string.Empty);
+
+            string json = File.ReadAllText(filePath);
             var data = JsonConvert.DeserializeObject<Dictionary<string, object>>(json);
 
             Toimintolajit = JsonConvert.DeserializeObject<Dictionary<string, string>>(data["Toimintolajit"].ToString() ?? string.Empty) ?? new Dictionary<string, string>();
@@ -151,8 +149,6 @@ namespace InvaSAP
             else
                 tbAsetuksetToimipaikka.Text = Properties.Settings.Default.Toimipaikka;
 
-
-
             using var db = new LiteDatabase(Properties.Settings.Default.Tietokantapolku);
 
             // Täytä käyttäjät tietokantaan
@@ -166,8 +162,6 @@ namespace InvaSAP
                 // Päivitä Asetukset-tabin käyttäjälista.
                 dgUsers.DataSource = db.GetCollection<User>("users").FindAll().ToList();
                 dgUsers.Refresh();
-
-                // TODO: Sama homma KirjaaPäivä
             }
 
             // Hae laitepuusolmut tietokannasta ja kasaa puu GUI:ssa
@@ -191,6 +185,12 @@ namespace InvaSAP
 
             // Täytä Avoimet työtilaukset listanäkymä töillä tietokannasta.
             dgOpenWorkOrders.DataSource = db.GetCollection<OpenWorkOrder>("openworkorders").FindAll().OrderByDescending(o => o.id).ToList();
+
+            // Henkilö comboboxit
+            cbHenkilo.DisplayMember = "DisplayText";
+            cbHenkilo.ValueMember = "Value";
+            cbKirjaaPaivaHenkilo.DisplayMember = "DisplayText";
+            cbKirjaaPaivaHenkilo.ValueMember = "Value";
 
             // Täytä pudotusvalikot
             var toimintolajit = Toimintolajit.Select(x => new { DisplayText = $"{x.Key} {x.Value}", Value = x.Key }).ToList();
@@ -857,6 +857,32 @@ namespace InvaSAP
             btnKirjaaTunnit.Enabled = true;
 
             this.BringToFront();
+
+            // TODO: tarkista, että tallennus onnistui
+            // TODO: siirrä omaan funktioon
+            string[] status = SAP.GetStatusBarInfo();
+            string msgType = status[0];
+            string statusText = status[1];
+
+            switch (msgType)
+            {
+                case "S": // Success
+                    MessageBox.Show(statusText, "Onnistuminen");
+                    break;
+                case "W": // Warning
+                    MessageBox.Show(statusText, "Varoitus", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    break;
+                case "E": // Error
+                    MessageBox.Show("Tallennus epäonnistui. \n\n" + statusText, "Virhe", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    break;
+                case "A": // Abort
+                    MessageBox.Show(statusText, "Keskeytys", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                    break;
+                case "I": // Information
+                    MessageBox.Show(statusText, "Informaatio", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    break;
+            }
+
         }
         private void btnLuo_Click(object sender, EventArgs e)
         {
@@ -1008,19 +1034,20 @@ namespace InvaSAP
                         cbKirjaaTuntejaToimintolaji.SelectedValue = Properties.Settings.Default.ViimeisinToimintolaji;
 
                     break;
-                case 2: // Avoimet työtilaukset
+                case 2: // Kirjaa päivä
+                    UpdateUserComboBox();
                     break;
-                case 3: // Asetukset
+                case 3: // Avoimet työtilaukset
+                    break;
+                case 4: // Asetukset
                     break;
 
             }
         }
 
-        // Täytä Kirjaa tunteja-tabin käyttäjäpudotusvalikko
+        // Täytä käyttäjäpudotusvalikot
         private void UpdateUserComboBox()
         {
-            cbHenkilo.DisplayMember = "DisplayText";
-            cbHenkilo.ValueMember = "Value";
 
             using var db = new LiteDatabase(Properties.Settings.Default.Tietokantapolku);
 
@@ -1032,6 +1059,7 @@ namespace InvaSAP
             users.Sort();
             users.Insert(0, new UserItem { DisplayText = "", Value = 0 }); // Tyhjä kenttä ensimmäiseksi, pakottaa käyttäjän valitsemaan.
             cbHenkilo.DataSource = users;
+            cbKirjaaPaivaHenkilo.DataSource = users;
 
             if (Properties.Settings.Default.ViimeisinKayttaja > 0)
                 cbHenkilo.SelectedValue = Properties.Settings.Default.ViimeisinKayttaja;

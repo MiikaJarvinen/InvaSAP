@@ -877,7 +877,7 @@
             cbKirjaaPaivaHenkilo.FormattingEnabled = true;
             cbKirjaaPaivaHenkilo.Location = new Point(75, 14);
             cbKirjaaPaivaHenkilo.Name = "cbKirjaaPaivaHenkilo";
-            cbKirjaaPaivaHenkilo.Size = new Size(156, 23);
+            cbKirjaaPaivaHenkilo.Size = new Size(169, 23);
             cbKirjaaPaivaHenkilo.TabIndex = 24;
             // 
             // label32
