@@ -230,6 +230,16 @@ namespace InvaSAP
             // Aseta kursori valmiiksi laitehakukenttään, kun ohjelma avataan.
             cbLaitehaku.Select();
         }
+
+        private void MoveAndResizeSapWindow()
+        {
+            IntPtr windowHandle = FindWindow(null, SAP.GetActiveWindowName());
+            ShowWindow(windowHandle, SW_RESTORE);
+            SetWindowPos(windowHandle, HWND_TOP, Left, Top, Width, Height, 0);
+            SetForegroundWindow(windowHandle);
+
+        }
+
         private static bool IsTodayWeekday()
         {
             DateTime currentDate = DateTime.Now;
@@ -415,6 +425,17 @@ namespace InvaSAP
             cbPrioriteetti.SelectedIndex = 2;
             cbTilauslaji.SelectedIndex = 1;
             cbJarjestelmatila.SelectedIndex = 2;
+        }
+        private void ClearConfirmWorkOrder()
+        {
+            tbTilausnumero.Text = string.Empty;
+            cbAloitusaika.Text = string.Empty;
+            cbLopetusaika.Text = string.Empty;
+            cbHenkilo.Text = string.Empty;
+            cbKirjaaTuntejaToimintolaji.Text = string.Empty;
+            tbVahvistusteksti.Text = string.Empty;
+            checkBoxLoppuvahvistus.Checked = false;
+            dgVaraosienPoisto.Rows.Clear();
         }
 
         // Luo työtilauksen. Jos parametrina antaa boolean-arvon tosi niin työ myös lähetetään tulostimelle.
@@ -676,6 +697,8 @@ namespace InvaSAP
 
             await SAP.Open();
 
+            MoveAndResizeSapWindow();
+
             SAP.StartTransaction("IW38");
 
             // Toimintopaikkasuodatin, erottele paikat ja lisää asteriski perään, mikäli ei vielä ole.
@@ -755,13 +778,14 @@ namespace InvaSAP
                 SAP.Close();
 
                 // Päivitä avoimet työt -listanäkymä
-                dgOpenWorkOrders.DataSource = db.GetCollection<OpenWorkOrder>("openworkorders").FindAll().ToList();
-                dgOpenWorkOrders.Refresh();
+                dgOpenWorkOrders.DataSource = db.GetCollection<OpenWorkOrder>("openworkorders").FindAll().OrderByDescending(x => x.id).ToList();
             }
             catch (Exception ex)
             {
                 Debug.WriteLine("OpenWorkOrdersRefresh - Exception: " + ex.Message);
             }
+
+            this.BringToFront();
 
         }
         private void ResetUsers(List<User> usersToAdd)
@@ -774,6 +798,38 @@ namespace InvaSAP
             dgUsers.DataSource = db.GetCollection<User>("users").FindAll().ToList();
             dgUsers.Refresh();
         }
+        // Lue SAPin statusbar/tilarivin ilmoitus ja ilmoita käyttäjälle.
+        // Tärkeä tieto, jos SAPissa tapahtuu virhe, kuten esim tunteja syöttäessä antaa jo kirjatun kellonajan.
+        private static bool ReadSapStatus()
+        {
+            bool success = false;
+
+            string[] status = SAP.GetStatusBarInfo();
+            string statusType = status[0];
+            string statusText = status[1];
+
+            switch (statusType)
+            {
+                case "S": // Success
+                    MessageBox.Show(statusText, "Onnistuminen");
+                    success = true;
+                    break;
+                case "W": // Warning
+                    MessageBox.Show(statusText, "Varoitus", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    break;
+                case "E": // Error
+                    MessageBox.Show("Tallennus epäonnistui. \n\n" + statusText, "Virhe", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    break;
+                case "A": // Abort
+                    MessageBox.Show(statusText, "Keskeytys", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                    break;
+                case "I": // Information
+                    MessageBox.Show(statusText, "Informaatio", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    break;
+            }
+
+            return success;
+        }
 
         private void PrefillOpenWorkOrder(OpenWorkOrder Order)
         {
@@ -783,7 +839,7 @@ namespace InvaSAP
             tbLaiteKuvaus.Text = Order.laiteKuvaus;
         }
         // Kirjaa tunteja työtilaukselle
-        private async void ConfirmWorkOrder()
+        private async void ConfirmWorkOrder(bool clearFormAfterSave = true)
         {
             if (string.IsNullOrEmpty(cbHenkilo.Text))
             {
@@ -806,11 +862,7 @@ namespace InvaSAP
 
             btnKirjaaTunnit.Enabled = false;
 
-            IntPtr windowHandle = FindWindow(null, SAP.GetActiveWindowName());
-            ShowWindow(windowHandle, SW_RESTORE);
-            SetWindowPos(windowHandle, HWND_TOP, this.Left, this.Top, this.Width, this.Height, 0);
-            SetForegroundWindow(windowHandle);
-
+            MoveAndResizeSapWindow();
 
             SAP.StartTransaction("IW41");
             SAP.SetTextBox("CORUF-AUFNR", tbTilausnumero.Text); // Tilausnumero
@@ -866,31 +918,14 @@ namespace InvaSAP
 
             this.BringToFront();
 
-            // TODO: tarkista, että tallennus onnistui
-            // TODO: siirrä omaan funktioon
-            string[] status = SAP.GetStatusBarInfo();
-            string msgType = status[0];
-            string statusText = status[1];
-
-            switch (msgType)
+            // Jos tallennus SAPiin onnistui, tarkista halutaanko lomake tyhjennettävän. Tyhjennä varaosien poistolista kuitenkin, tuplapoistojen välttämiseksi.
+            if (ReadSapStatus())
             {
-                case "S": // Success
-                    MessageBox.Show(statusText, "Onnistuminen");
-                    break;
-                case "W": // Warning
-                    MessageBox.Show(statusText, "Varoitus", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                    break;
-                case "E": // Error
-                    MessageBox.Show("Tallennus epäonnistui. \n\n" + statusText, "Virhe", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    break;
-                case "A": // Abort
-                    MessageBox.Show(statusText, "Keskeytys", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
-                    break;
-                case "I": // Information
-                    MessageBox.Show(statusText, "Informaatio", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    break;
+                if (clearFormAfterSave)
+                    ClearConfirmWorkOrder();
+                else
+                    dgVaraosienPoisto.Rows.Clear();
             }
-
         }
         private void btnLuo_Click(object sender, EventArgs e)
         {
@@ -1140,6 +1175,10 @@ namespace InvaSAP
         {
             ConfirmWorkOrder();
         }
+        private void btnKirjaaTunnitNoClear_Click(object sender, EventArgs e)
+        {
+            ConfirmWorkOrder(false);
+        }
 
         private void dgVaraosienPoisto_RowsAdded(object sender, DataGridViewRowsAddedEventArgs e)
         {
@@ -1149,14 +1188,6 @@ namespace InvaSAP
             newRow.Cells["count"].Value = 1;
             newRow.Cells["unit"].Value = "KPL";
         }
-
-
-        private async void button1_Click(object sender, EventArgs e)
-        {
-            await SAP.Open();
-        }
-
-
 
         private void FillTimeComboboxes()
         {
@@ -1211,6 +1242,11 @@ namespace InvaSAP
             // TODO: toimintolaji, kopioit kirjaa tunnit
             // TODO: henkilöt, kopioi kirjaa tunnit
             // TODO: luo tuntimäärä -> kellonajat, ja muista mitkä on käytetty
+        }
+
+        private void btnAvoimetTyotTulosta_Click(object sender, EventArgs e)
+        {
+            // TODO: tulosta työtilauspaperi listan valitusta työstä
         }
     }
 }

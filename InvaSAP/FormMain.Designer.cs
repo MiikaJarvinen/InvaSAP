@@ -63,7 +63,7 @@
             label9 = new Label();
             tabKirjaaTunteja = new TabPage();
             splitContainerKirjaaTunteja = new SplitContainer();
-            button1 = new Button();
+            btnKirjaaTunnitNoClear = new Button();
             label29 = new Label();
             btnKirjaaTunnit = new Button();
             checkBoxLoppuvahvistus = new CheckBox();
@@ -103,6 +103,7 @@
             Kuvaus = new DataGridViewTextBoxColumn();
             Laite = new DataGridViewTextBoxColumn();
             Laitekuvaus = new DataGridViewTextBoxColumn();
+            btnAvoimetTyotTulosta = new Button();
             btnKirjaaTunteja = new Button();
             tbOpenWorkOrdersFunctionalLocation = new TextBox();
             label17 = new Label();
@@ -143,6 +144,7 @@
             tbLog = new TextBox();
             btnHaeLaitepuu = new Button();
             btnResetUsers = new Button();
+            btnLuoTyoJaVahvista = new Button();
             dataGridViewTextBoxColumn2 = new DataGridViewTextBoxColumn();
             Tunnit = new DataGridViewTextBoxColumn();
             Vahvistusteksti = new DataGridViewTextBoxColumn();
@@ -235,6 +237,7 @@
             // 
             // splitContainerLuoTyotilaus.Panel2
             // 
+            splitContainerLuoTyotilaus.Panel2.Controls.Add(btnLuoTyoJaVahvista);
             splitContainerLuoTyotilaus.Panel2.Controls.Add(tbPitkaTeksti);
             splitContainerLuoTyotilaus.Panel2.Controls.Add(btnLuoJaTulosta);
             splitContainerLuoTyotilaus.Panel2.Controls.Add(tbKuvaus);
@@ -345,7 +348,7 @@
             // 
             // btnLuoJaTulosta
             // 
-            btnLuoJaTulosta.Location = new Point(114, 379);
+            btnLuoJaTulosta.Location = new Point(114, 451);
             btnLuoJaTulosta.Name = "btnLuoJaTulosta";
             btnLuoJaTulosta.Size = new Size(268, 38);
             btnLuoJaTulosta.TabIndex = 9;
@@ -397,7 +400,7 @@
             // label11
             // 
             label11.AutoSize = true;
-            label11.Location = new Point(14, 500);
+            label11.Location = new Point(14, 572);
             label11.Name = "label11";
             label11.Size = new Size(62, 15);
             label11.TabIndex = 30;
@@ -415,7 +418,7 @@
             // label10
             // 
             label10.AutoSize = true;
-            label10.Location = new Point(14, 471);
+            label10.Location = new Point(14, 543);
             label10.Name = "label10";
             label10.Size = new Size(75, 15);
             label10.TabIndex = 29;
@@ -466,7 +469,7 @@
             // 
             // tbLoppuaika
             // 
-            tbLoppuaika.Location = new Point(262, 497);
+            tbLoppuaika.Location = new Point(262, 569);
             tbLoppuaika.Name = "tbLoppuaika";
             tbLoppuaika.Size = new Size(120, 23);
             tbLoppuaika.TabIndex = 14;
@@ -482,7 +485,7 @@
             // 
             // tbAlkuaika
             // 
-            tbAlkuaika.Location = new Point(114, 497);
+            tbAlkuaika.Location = new Point(114, 569);
             tbAlkuaika.Name = "tbAlkuaika";
             tbAlkuaika.Size = new Size(120, 23);
             tbAlkuaika.TabIndex = 13;
@@ -499,21 +502,21 @@
             // 
             // tbLoppupaiva
             // 
-            tbLoppupaiva.Location = new Point(262, 468);
+            tbLoppupaiva.Location = new Point(262, 540);
             tbLoppupaiva.Name = "tbLoppupaiva";
             tbLoppupaiva.Size = new Size(120, 23);
             tbLoppupaiva.TabIndex = 12;
             // 
             // tbIlmoituslaji
             // 
-            tbIlmoituslaji.Location = new Point(114, 439);
+            tbIlmoituslaji.Location = new Point(114, 511);
             tbIlmoituslaji.Name = "tbIlmoituslaji";
             tbIlmoituslaji.Size = new Size(268, 23);
             tbIlmoituslaji.TabIndex = 10;
             // 
             // tbAlkupaiva
             // 
-            tbAlkupaiva.Location = new Point(114, 468);
+            tbAlkupaiva.Location = new Point(114, 540);
             tbAlkupaiva.Name = "tbAlkupaiva";
             tbAlkupaiva.Size = new Size(120, 23);
             tbAlkupaiva.TabIndex = 11;
@@ -521,7 +524,7 @@
             // label9
             // 
             label9.AutoSize = true;
-            label9.Location = new Point(14, 442);
+            label9.Location = new Point(14, 514);
             label9.Name = "label9";
             label9.Size = new Size(68, 15);
             label9.TabIndex = 22;
@@ -545,7 +548,7 @@
             // 
             // splitContainerKirjaaTunteja.Panel1
             // 
-            splitContainerKirjaaTunteja.Panel1.Controls.Add(button1);
+            splitContainerKirjaaTunteja.Panel1.Controls.Add(btnKirjaaTunnitNoClear);
             splitContainerKirjaaTunteja.Panel1.Controls.Add(label29);
             splitContainerKirjaaTunteja.Panel1.Controls.Add(btnKirjaaTunnit);
             splitContainerKirjaaTunteja.Panel1.Controls.Add(checkBoxLoppuvahvistus);
@@ -575,15 +578,15 @@
             splitContainerKirjaaTunteja.SplitterDistance = 496;
             splitContainerKirjaaTunteja.TabIndex = 30;
             // 
-            // button1
+            // btnKirjaaTunnitNoClear
             // 
-            button1.Location = new Point(140, 476);
-            button1.Name = "button1";
-            button1.Size = new Size(75, 23);
-            button1.TabIndex = 33;
-            button1.Text = "button1";
-            button1.UseVisualStyleBackColor = true;
-            button1.Click += button1_Click;
+            btnKirjaaTunnitNoClear.Location = new Point(117, 362);
+            btnKirjaaTunnitNoClear.Name = "btnKirjaaTunnitNoClear";
+            btnKirjaaTunnitNoClear.Size = new Size(281, 34);
+            btnKirjaaTunnitNoClear.TabIndex = 33;
+            btnKirjaaTunnitNoClear.Text = "Tallenna, älä tyhjennä lomaketta";
+            btnKirjaaTunnitNoClear.UseVisualStyleBackColor = true;
+            btnKirjaaTunnitNoClear.Click += btnKirjaaTunnitNoClear_Click;
             // 
             // label29
             // 
@@ -736,6 +739,7 @@
             // tbVahvistusteksti
             // 
             tbVahvistusteksti.Location = new Point(117, 246);
+            tbVahvistusteksti.MaxLength = 40;
             tbVahvistusteksti.Name = "tbVahvistusteksti";
             tbVahvistusteksti.Size = new Size(281, 23);
             tbVahvistusteksti.TabIndex = 21;
@@ -927,6 +931,7 @@
             // 
             // splitContainerAvoimetTyot.Panel2
             // 
+            splitContainerAvoimetTyot.Panel2.Controls.Add(btnAvoimetTyotTulosta);
             splitContainerAvoimetTyot.Panel2.Controls.Add(btnKirjaaTunteja);
             splitContainerAvoimetTyot.Panel2.Controls.Add(tbOpenWorkOrdersFunctionalLocation);
             splitContainerAvoimetTyot.Panel2.Controls.Add(label17);
@@ -998,6 +1003,16 @@
             Laitekuvaus.Name = "Laitekuvaus";
             Laitekuvaus.ReadOnly = true;
             Laitekuvaus.Width = 94;
+            // 
+            // btnAvoimetTyotTulosta
+            // 
+            btnAvoimetTyotTulosta.Location = new Point(4, 589);
+            btnAvoimetTyotTulosta.Name = "btnAvoimetTyotTulosta";
+            btnAvoimetTyotTulosta.Size = new Size(147, 29);
+            btnAvoimetTyotTulosta.TabIndex = 7;
+            btnAvoimetTyotTulosta.Text = "Tulosta";
+            btnAvoimetTyotTulosta.UseVisualStyleBackColor = true;
+            btnAvoimetTyotTulosta.Click += btnAvoimetTyotTulosta_Click;
             // 
             // btnKirjaaTunteja
             // 
@@ -1418,6 +1433,15 @@
             btnResetUsers.UseVisualStyleBackColor = true;
             btnResetUsers.Click += btnResetUsers_Click;
             // 
+            // btnLuoTyoJaVahvista
+            // 
+            btnLuoTyoJaVahvista.Location = new Point(114, 379);
+            btnLuoTyoJaVahvista.Name = "btnLuoTyoJaVahvista";
+            btnLuoTyoJaVahvista.Size = new Size(268, 38);
+            btnLuoTyoJaVahvista.TabIndex = 31;
+            btnLuoTyoJaVahvista.Text = "Luo työ ja siirry vahvistukseen";
+            btnLuoTyoJaVahvista.UseVisualStyleBackColor = true;
+            // 
             // dataGridViewTextBoxColumn2
             // 
             dataGridViewTextBoxColumn2.HeaderText = "Työnumero";
@@ -1426,12 +1450,14 @@
             // Tunnit
             // 
             Tunnit.HeaderText = "Tuntimäärä";
+            Tunnit.MaxInputLength = 2;
             Tunnit.Name = "Tunnit";
             // 
             // Vahvistusteksti
             // 
             Vahvistusteksti.AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
             Vahvistusteksti.HeaderText = "Vahvistusteksti";
+            Vahvistusteksti.MaxInputLength = 40;
             Vahvistusteksti.Name = "Vahvistusteksti";
             // 
             // Loppuvahvistus
@@ -1612,7 +1638,6 @@
         private GroupBox groupBox4;
         private GroupBox groupBox5;
         private DataGridView dgVaraosienPoisto;
-        private Button button1;
         private DataGridViewTextBoxColumn dataGridViewTextBoxColumn1;
         private DataGridViewTextBoxColumn count;
         private DataGridViewComboBoxColumn unit;
@@ -1630,6 +1655,9 @@
         private ComboBox cbKirjaaPaivaHenkilo;
         private Label label32;
         private DataGridView dgKirjaaPaiva;
+        private Button btnKirjaaTunnitNoClear;
+        private Button btnAvoimetTyotTulosta;
+        private Button btnLuoTyoJaVahvista;
         private DataGridViewTextBoxColumn dataGridViewTextBoxColumn2;
         private DataGridViewTextBoxColumn Tunnit;
         private DataGridViewTextBoxColumn Vahvistusteksti;
