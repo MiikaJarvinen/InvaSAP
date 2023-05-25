@@ -2,9 +2,13 @@
 using Newtonsoft.Json;
 using SAPFEWSELib;
 using System.Diagnostics;
+using System.Reflection.PortableExecutable;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using System.Windows.Automation;
+using System.Windows.Forms;
+using System.Xml.Linq;
+using static System.ComponentModel.Design.ObjectSelectorEditor;
 
 namespace InvaSAP
 {
@@ -439,22 +443,27 @@ namespace InvaSAP
         }
 
         // Luo työtilauksen. Jos parametrina antaa boolean-arvon tosi niin työ myös lähetetään tulostimelle.
-        private async void CreateWorkOrder(bool print)
+        private async Task<int> CreateWorkOrder(bool print, bool showMsgBox = false)
         {
             TreeNode selectedNode = treeLaitepuu.SelectedNode;
             if (selectedNode == null)
             {
                 MessageBox.Show("Sinun on valittava laite, jolle työ kohdistetaan ennen kuin työtilaus voidaan luoda.", "Pakollinen arvo");
-                return;
+                return -1;
             }
             if (string.IsNullOrEmpty(tbKuvaus.Text))
             {
                 MessageBox.Show("Sinun tulee antaa kuvaus työlle.", "Pakollinen arvo");
-                return;
+                return -1;
             }
             MachineTreeNode machine = (MachineTreeNode)selectedNode.Tag;
 
+            int createdWorkOrderId = -1;
+
             await SAP.Open();
+
+            MoveAndResizeSapWindow();
+
             SAP.StartTransaction("IW21");
 
             try
@@ -506,8 +515,6 @@ namespace InvaSAP
                 else
                     SAP.PressButton("btn[11]"); // Tallennusnappi
 
-                // Siivotaan Luo työtilaus-lomake
-                ClearFormCreateWorkOrder();
 
                 // Etsitään alareunan tilapalkin tekstistä uuden työtilauksen numero ja kopioidaan leikepöydälle.
                 //GuiStatusbar statusBar = (GuiStatusbar)SAP.SapSession.FindById("wnd[0]/sbar");
@@ -517,23 +524,30 @@ namespace InvaSAP
                 Match match = regex.Match(statusBar.Text);
                 workorder = match.Groups[1].Value;
                 Clipboard.SetText(workorder);
+                createdWorkOrderId = int.Parse(workorder);
+
+                // Lisää uusi työ myös avoimien töiden tietokantaan ja listaukseen
+                DatabaseInsertNewWorkOrder(workorder, tbKuvaus.Text.Trim(), machine.id, machine.name ?? "");
+
+                // Siivotaan Luo työtilaus-lomake
+                ClearFormCreateWorkOrder();
 
                 // Sulje SAP. Jos tulostetaan, OnWindowClosed eventhandler kutsuu sulkemisen sen jälkeen kun tulostus on valmis.
                 if (!print)
                     SAP.Close();
 
-                MessageBox.Show("Uusi työtilaus luotiin numerolla: " + workorder, "Uusi työtilaus");
+                if (showMsgBox)
+                    MessageBox.Show("Uusi työtilaus luotiin numerolla: " + workorder, "Uusi työtilaus");
 
-                BringToFront();
-
-                // TODO: Lisää uusi työ myös avoimien töiden tietokantaan ja listaukseen
             }
             catch (Exception exp)
             {
                 Trace.WriteLine("Luo Työtilaus: " + exp.Message);
             }
 
+            this.BringToFront();
 
+            return createdWorkOrderId;
         }
         // Hae laite ja toimipaikka tiedot SAPista ja tallenna ne paikalliseen tietokantaan.
         private async void FetchMachineAndLocationDataFromSAP()
@@ -772,13 +786,12 @@ namespace InvaSAP
                             wo.laiteKuvaus = "[Tunnistamaton laite]";
                     }
 
-                    workOrders.Insert(wo);
+                    workOrders.Insert(wo); // TODO: muuta käyttämään DatabaseInsertNewWorkOrder()
                 }
 
                 SAP.Close();
 
-                // Päivitä avoimet työt -listanäkymä
-                dgOpenWorkOrders.DataSource = db.GetCollection<OpenWorkOrder>("openworkorders").FindAll().OrderByDescending(x => x.id).ToList();
+                UpdateOpenWorkOrderList();
             }
             catch (Exception ex)
             {
@@ -787,6 +800,20 @@ namespace InvaSAP
 
             this.BringToFront();
 
+        }
+        private static void DatabaseInsertNewWorkOrder(string workOrderId, string workOrderDesc, string machineId, string machineDesc)
+        {
+            using var db = new LiteDatabase(Properties.Settings.Default.Tietokantapolku);
+            var workOrders = db.GetCollection<OpenWorkOrder>("openworkorders");
+
+            OpenWorkOrder wo = new()
+            {
+                id = workOrderId,
+                kuvaus = workOrderDesc,
+                laite = machineId,
+                laiteKuvaus = machineDesc
+            };
+            workOrders.Insert(wo);
         }
         private void ResetUsers(List<User> usersToAdd)
         {
@@ -929,12 +956,28 @@ namespace InvaSAP
         }
         private void btnLuo_Click(object sender, EventArgs e)
         {
-            CreateWorkOrder(false);
+            CreateWorkOrder(false, true);
+        }
+        private async void btnLuoTyoJaVahvista_Click(object sender, EventArgs e)
+        {
+            // TODO: poista messagebox luodusta työstä
+            tbTyokuvaus.Text = tbKuvaus.Text;
+            TreeNode selectedNode = treeLaitepuu.SelectedNode;
+            MachineTreeNode machine = (MachineTreeNode)selectedNode.Tag;
+            tbLaite.Text = machine.id;
+            tbLaiteKuvaus.Text = machine.name;
+
+            cbKirjaaTuntejaToimintolaji.SelectedValue = cbToimintolaji.SelectedValue;
+            int workOrderId = await CreateWorkOrder(false);
+            tbTilausnumero.Text = workOrderId.ToString();
+
+            tabControlMain.SelectedTab = tabKirjaaTunteja;
         }
         private void btnLuoJaTulosta_Click(object sender, EventArgs e)
         {
             CreateWorkOrder(true);
         }
+
         private void btnHaeLaitepuu_Click(object sender, EventArgs e)
         {
             DialogResult dr = MessageBox.Show("Tämä toiminto vaatii SAP-oikeudet transaktioneihin IH01, IH06 ja IH08. \n\nOletko varma, että haluat jatkaa?", "Varmistus", MessageBoxButtons.YesNo);
@@ -1081,6 +1124,7 @@ namespace InvaSAP
                     UpdateUserComboBox();
                     break;
                 case 3: // Avoimet työtilaukset
+                    UpdateOpenWorkOrderList();
                     break;
                 case 4: // Asetukset
                     break;
@@ -1108,9 +1152,17 @@ namespace InvaSAP
                 cbHenkilo.SelectedValue = Properties.Settings.Default.ViimeisinKayttaja;
         }
 
+        private void UpdateOpenWorkOrderList()
+        {
+            using var db = new LiteDatabase(Properties.Settings.Default.Tietokantapolku);
+            var workOrders = db.GetCollection<OpenWorkOrder>("openworkorders");
+
+            dgOpenWorkOrders.DataSource = workOrders.FindAll().OrderByDescending(x => x.id).ToList();
+        }
+
         private void OpenConfirmWorkOrderTab(string OrderId)
         {
-            OpenWorkOrder order = new() // TODO: testidataa
+            OpenWorkOrder order = new() // TODO: testidataa, hae kannasta tarvittavat tiedot
             {
                 id = OrderId,
                 kuvaus = "TekstiKuvaus",
@@ -1133,7 +1185,7 @@ namespace InvaSAP
                     DataGridViewCell cell = row.Cells[0];
                     string orderId = (string)cell.Value;
 
-                    OpenConfirmWorkOrderTab(orderId);
+                    OpenConfirmWorkOrderTab(orderId); // TODO: siirrä kaikki tarvittavat tiedot
                 }
             }
             else
@@ -1142,6 +1194,7 @@ namespace InvaSAP
             }
         }
 
+
         private void DataGridViewOpenWorkOrders_CellDoubleClick(object sender, DataGridViewCellEventArgs e)
         {
             if (e.RowIndex >= 0 && e.ColumnIndex >= 0)
@@ -1149,7 +1202,7 @@ namespace InvaSAP
                 DataGridViewCell cell = dgOpenWorkOrders.Rows[e.RowIndex].Cells[0];
                 string orderId = (string)cell.Value;
 
-                OpenConfirmWorkOrderTab(orderId);
+                OpenConfirmWorkOrderTab(orderId); // TODO: siirrä kaikki tarvittavat tiedot
             }
         }
 
@@ -1238,7 +1291,6 @@ namespace InvaSAP
 
         private void btnKirjaaPaiva_Click(object sender, EventArgs e)
         {
-            // TODO: Kenttien max pituus
             // TODO: toimintolaji, kopioit kirjaa tunnit
             // TODO: henkilöt, kopioi kirjaa tunnit
             // TODO: luo tuntimäärä -> kellonajat, ja muista mitkä on käytetty
@@ -1248,5 +1300,6 @@ namespace InvaSAP
         {
             // TODO: tulosta työtilauspaperi listan valitusta työstä
         }
+
     }
 }
