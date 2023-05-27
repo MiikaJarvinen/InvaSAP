@@ -145,6 +145,8 @@
             name = new DataGridViewTextBoxColumn();
             show = new DataGridViewCheckBoxColumn();
             groupBox2 = new GroupBox();
+            label33 = new Label();
+            tbLaitehakuVariantti = new TextBox();
             label31 = new Label();
             tbAsetuksetToimipaikka = new TextBox();
             tbLog = new TextBox();
@@ -1414,6 +1416,8 @@
             // 
             // groupBox2
             // 
+            groupBox2.Controls.Add(label33);
+            groupBox2.Controls.Add(tbLaitehakuVariantti);
             groupBox2.Controls.Add(label31);
             groupBox2.Controls.Add(tbAsetuksetToimipaikka);
             groupBox2.Controls.Add(tbLog);
@@ -1421,10 +1425,27 @@
             groupBox2.Dock = DockStyle.Top;
             groupBox2.Location = new Point(0, 0);
             groupBox2.Name = "groupBox2";
-            groupBox2.Size = new Size(329, 362);
+            groupBox2.Size = new Size(329, 390);
             groupBox2.TabIndex = 14;
             groupBox2.TabStop = false;
             groupBox2.Text = "Laite- ja toimintopaikkojen haku SAPista";
+            // 
+            // label33
+            // 
+            label33.AutoSize = true;
+            label33.Location = new Point(6, 61);
+            label33.Name = "label33";
+            label33.Size = new Size(53, 15);
+            label33.TabIndex = 17;
+            label33.Text = "Variantti:";
+            // 
+            // tbLaitehakuVariantti
+            // 
+            tbLaitehakuVariantti.Location = new Point(85, 58);
+            tbLaitehakuVariantti.Name = "tbLaitehakuVariantti";
+            tbLaitehakuVariantti.Size = new Size(237, 23);
+            tbLaitehakuVariantti.TabIndex = 16;
+            tbLaitehakuVariantti.TextChanged += tbLaitehakuVariantti_TextChanged;
             // 
             // label31
             // 
@@ -1445,7 +1466,7 @@
             // 
             // tbLog
             // 
-            tbLog.Location = new Point(3, 111);
+            tbLog.Location = new Point(3, 134);
             tbLog.Multiline = true;
             tbLog.Name = "tbLog";
             tbLog.ReadOnly = true;
@@ -1455,7 +1476,7 @@
             // 
             // btnHaeLaitepuu
             // 
-            btnHaeLaitepuu.Location = new Point(3, 61);
+            btnHaeLaitepuu.Location = new Point(3, 87);
             btnHaeLaitepuu.Name = "btnHaeLaitepuu";
             btnHaeLaitepuu.Size = new Size(323, 41);
             btnHaeLaitepuu.TabIndex = 6;
@@ -1664,5 +1685,7 @@
         private DataGridViewTextBoxColumn Vahvistusteksti;
         private DataGridViewCheckBoxColumn Loppuvahvistus;
         private DataGridViewComboBoxColumn Toimintolaji;
+        private Label label33;
+        private TextBox tbLaitehakuVariantti;
     }
 }

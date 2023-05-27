@@ -15,6 +15,7 @@ namespace InvaSAP
 
     public partial class FormMain : Form
     {
+        #region Operating System
         // Windowsin ikkunoiden hallintaan liittyvää.
         [DllImport("user32.dll")]
         private static extern IntPtr FindWindow(string lpClassName, string lpWindowName);
@@ -39,7 +40,54 @@ namespace InvaSAP
         [DllImport("user32.dll")]
         private static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
 
+        // EH Windowsin ikkunan avaamisen tunnistukseen
+        private static void OnWindowOpened(object sender, AutomationEventArgs automationEventArgs)
+        {
+            try
+            {
+                AutomationElement? element = sender as AutomationElement ?? throw new NullReferenceException($"AutomationElement sender was null.");
+                Debug.WriteLine("New window opened: " + element.Current.Name);
+                IntPtr windowHandle = new(element.Current.NativeWindowHandle);
 
+                switch (element.Current.Name)
+                {
+                    case "Tulosta":
+                        try
+                        {
+                            // Etsi OK-painike sen luokan ja tekstin perusteella.
+                            IntPtr okButtonHandle = FindWindowEx(windowHandle, IntPtr.Zero, "Button", "OK");
+
+                            // Paina OK-painiketta.
+                            SendMessage(okButtonHandle, BM_CLICK, IntPtr.Zero, IntPtr.Zero);
+                        }
+                        catch
+                        {
+                            Debug.WriteLine("Exception in OnWindowOpened (Automation Eventhandler)");
+                        };
+                        break;
+
+                    case "SAP Logon 770":
+                        ShowWindowAsync(windowHandle, SW_SHOWMINIMIZED);
+                        break;
+                }
+
+            }
+            catch (NullReferenceException ex)
+            {
+                Debug.WriteLine($"NullReferenceException in OnWindowOpened-eventhandler: {ex.Message}");
+                throw;
+            }
+        }
+        private void MoveAndResizeSapWindow()
+        {
+            IntPtr windowHandle = FindWindow(null, SAP.GetActiveWindowName());
+            ShowWindow(windowHandle, SW_RESTORE);
+            SetWindowPos(windowHandle, HWND_TOP, Left, Top, Width, Height, 0);
+            SetForegroundWindow(windowHandle);
+
+        }
+        #endregion
+        #region Classes
         // Käyttäjäluokka LiteDB-tietokantaa varten.
         public class User
         {
@@ -72,7 +120,6 @@ namespace InvaSAP
             public int? nodeParent { get; set; } // SAP laitepuun ylempi node
             public int? nodeType { get; set; } // 0 = laite, 1 = toimintopaikka, 2 = nimike
         };
-
         // Apufunktio laitepuusolmun luomiseen
         static MachineTreeNode CreateMachineTreeNode(string id, string name, string area, int nodeKey, int nodeLevel, int nodeParent, int nodeType)
         {
@@ -88,14 +135,17 @@ namespace InvaSAP
             };
             return temp;
         }
-
+        #endregion
+        #region Global variables
         private static Dictionary<string, string> Toimintolajit;
         private static Dictionary<string, string> Prioriteetit;
         private static Dictionary<string, string> Tilauslajit;
         private static Dictionary<string, string> Jarjestelmatilat;
         private static List<User> Kayttajat;
         private static string AvoimetTyotVariantti;
+        private static string LaitehakuVariantti;
         private static string Toimipaikka;
+        #endregion
         public static void LoadDefaultDataFromJSON()
         {
             string filePath = "Config.json";
@@ -111,6 +161,7 @@ namespace InvaSAP
             Jarjestelmatilat = JsonConvert.DeserializeObject<Dictionary<string, string>>(data["Jarjestelmatilat"].ToString() ?? string.Empty) ?? new Dictionary<string, string>();
             Kayttajat = JsonConvert.DeserializeObject<List<User>>(data["Kayttajat"].ToString() ?? string.Empty) ?? new List<User> { };
             AvoimetTyotVariantti = JsonConvert.DeserializeObject<dynamic>(json).AvoimetTyotVariantti.ToString() ?? "/KUPITIL";
+            LaitehakuVariantti = JsonConvert.DeserializeObject<dynamic>(json).LaitehakuVariantti.ToString() ?? "/IDJAKUVAUS";
             Toimipaikka = JsonConvert.DeserializeObject<dynamic>(json).Toimipaikka.ToString() ?? "7010";
         }
         public FormMain()
@@ -147,6 +198,12 @@ namespace InvaSAP
                 tbAsetuksetVariantti.Text = AvoimetTyotVariantti;
             else
                 tbAsetuksetVariantti.Text = Properties.Settings.Default.AsetuksetAvoimetTyotVariantti;
+
+            if (Properties.Settings.Default.AsetuksetLaitehakuVariantti == "")
+                tbLaitehakuVariantti.Text = LaitehakuVariantti;
+            else
+                tbLaitehakuVariantti.Text = Properties.Settings.Default.AsetuksetLaitehakuVariantti;
+
 
             if (Properties.Settings.Default.Toimipaikka == "")
                 tbAsetuksetToimipaikka.Text = Toimipaikka;
@@ -235,23 +292,7 @@ namespace InvaSAP
             cbLaitehaku.Select();
         }
 
-        private void MoveAndResizeSapWindow()
-        {
-            IntPtr windowHandle = FindWindow(null, SAP.GetActiveWindowName());
-            ShowWindow(windowHandle, SW_RESTORE);
-            SetWindowPos(windowHandle, HWND_TOP, Left, Top, Width, Height, 0);
-            SetForegroundWindow(windowHandle);
-
-        }
-
-        private static bool IsTodayWeekday()
-        {
-            DateTime currentDate = DateTime.Now;
-            DayOfWeek currentDayOfWeek = currentDate.DayOfWeek;
-
-            return currentDayOfWeek >= DayOfWeek.Monday && currentDayOfWeek <= DayOfWeek.Friday;
-        }
-
+        #region MachineTreeView
         // Kasaa laitepuu GUI:ssa
         private void UpdateMachineTreeview()
         {
@@ -415,33 +456,9 @@ namespace InvaSAP
                 UpdateChildNodes(childTreeNode, childNode, nodes);
             }
         }
+        #endregion
 
-        // Resetoi Luo ilmoitus-lomake
-        private void ClearFormCreateWorkOrder()
-        {
-            cbLaitehaku.Text = "";
-            tbLaitehaku.Text = "";
-
-            tbKuvaus.Text = "";
-            tbPitkaTeksti.Text = "";
-
-            cbToimintolaji.SelectedIndex = 0;
-            cbPrioriteetti.SelectedIndex = 2;
-            cbTilauslaji.SelectedIndex = 1;
-            cbJarjestelmatila.SelectedIndex = 2;
-        }
-        private void ClearConfirmWorkOrder()
-        {
-            tbTilausnumero.Text = string.Empty;
-            cbAloitusaika.Text = string.Empty;
-            cbLopetusaika.Text = string.Empty;
-            cbHenkilo.Text = string.Empty;
-            cbKirjaaTuntejaToimintolaji.Text = string.Empty;
-            tbVahvistusteksti.Text = string.Empty;
-            checkBoxLoppuvahvistus.Checked = false;
-            dgVaraosienPoisto.Rows.Clear();
-        }
-
+        #region SAP Transactions
         // Luo työtilauksen. Jos parametrina antaa boolean-arvon tosi niin työ myös lähetetään tulostimelle.
         private async Task<int> CreateWorkOrder(bool print, bool showMsgBox = false)
         {
@@ -801,70 +818,6 @@ namespace InvaSAP
             this.BringToFront();
 
         }
-        private static void DatabaseInsertNewWorkOrder(string workOrderId, string workOrderDesc, string machineId, string machineDesc)
-        {
-            using var db = new LiteDatabase(Properties.Settings.Default.Tietokantapolku);
-            var workOrders = db.GetCollection<OpenWorkOrder>("openworkorders");
-
-            OpenWorkOrder wo = new()
-            {
-                id = workOrderId,
-                kuvaus = workOrderDesc,
-                laite = machineId,
-                laiteKuvaus = machineDesc
-            };
-            workOrders.Insert(wo);
-        }
-        private void ResetUsers(List<User> usersToAdd)
-        {
-            using var db = new LiteDatabase(Properties.Settings.Default.Tietokantapolku);
-            var users = db.GetCollection<User>("users");
-            users.DeleteAll();
-            users.InsertBulk(usersToAdd);
-
-            dgUsers.DataSource = db.GetCollection<User>("users").FindAll().ToList();
-            dgUsers.Refresh();
-        }
-        // Lue SAPin statusbar/tilarivin ilmoitus ja ilmoita käyttäjälle.
-        // Tärkeä tieto, jos SAPissa tapahtuu virhe, kuten esim tunteja syöttäessä antaa jo kirjatun kellonajan.
-        private static bool ReadSapStatus()
-        {
-            bool success = false;
-
-            string[] status = SAP.GetStatusBarInfo();
-            string statusType = status[0];
-            string statusText = status[1];
-
-            switch (statusType)
-            {
-                case "S": // Success
-                    MessageBox.Show(statusText, "Onnistuminen");
-                    success = true;
-                    break;
-                case "W": // Warning
-                    MessageBox.Show(statusText, "Varoitus", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                    break;
-                case "E": // Error
-                    MessageBox.Show("Tallennus epäonnistui. \n\n" + statusText, "Virhe", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    break;
-                case "A": // Abort
-                    MessageBox.Show(statusText, "Keskeytys", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
-                    break;
-                case "I": // Information
-                    MessageBox.Show(statusText, "Informaatio", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    break;
-            }
-
-            return success;
-        }
-
-        private void PrefillOpenWorkOrder(OpenWorkOrder Order)
-        {
-            tbTilausnumero.Text = Order.id;
-            tbTyokuvaus.Text = Order.kuvaus;
-            tbLaite.Text = Order.laite;
-            tbLaiteKuvaus.Text = Order.laiteKuvaus;
-        }
         // Kirjaa tunteja työtilaukselle
         private async void ConfirmWorkOrder(bool clearFormAfterSave = true)
         {
@@ -905,7 +858,7 @@ namespace InvaSAP
             SAP.SetTextBox("AFRUD-IEDD", dtpPaiva.Value.ToString("dd.MM.yyyy")); // Lopetuspäivä
             SAP.SetTextBox("AFRUD-ISDZ", cbAloitusaika.Text); // Aloitusaika
             SAP.SetTextBox("AFRUD-IEDZ", cbLopetusaika.Text); // Lopetusaika
-            SAP.SetTextField("AFRUD-LTXA1", tbVahvistusteksti.Text); // TODO: korjaa kentän max pituus, että täsmää sapin max merkkimäärään
+            SAP.SetTextField("AFRUD-LTXA1", tbVahvistusteksti.Text); // Vahvistusteksti
 
             SAP.PressButton("/tbar[1]/btn[8]"); // Varaosien poisto
             for (int i = 0; i < dgVaraosienPoisto.Rows.Count - 1; i++)
@@ -954,6 +907,176 @@ namespace InvaSAP
                     dgVaraosienPoisto.Rows.Clear();
             }
         }
+
+        #endregion
+
+        #region Database interactions
+        private static void DatabaseInsertNewWorkOrder(string workOrderId, string workOrderDesc, string machineId, string machineDesc)
+        {
+            using var db = new LiteDatabase(Properties.Settings.Default.Tietokantapolku);
+            var workOrders = db.GetCollection<OpenWorkOrder>("openworkorders");
+
+            OpenWorkOrder wo = new()
+            {
+                id = workOrderId,
+                kuvaus = workOrderDesc,
+                laite = machineId,
+                laiteKuvaus = machineDesc
+            };
+            workOrders.Insert(wo);
+        }
+        private void ResetUsers(List<User> usersToAdd)
+        {
+            using var db = new LiteDatabase(Properties.Settings.Default.Tietokantapolku);
+            var users = db.GetCollection<User>("users");
+            users.DeleteAll();
+            users.InsertBulk(usersToAdd);
+
+            dgUsers.DataSource = db.GetCollection<User>("users").FindAll().ToList();
+            dgUsers.Refresh();
+        }
+        #endregion
+
+        // Lue SAPin statusbar/tilarivin ilmoitus ja ilmoita käyttäjälle. Tärkeä tieto, jos SAPissa tapahtuu virhe, kuten esim tunteja syöttäessä antaa jo kirjatun kellonajan.
+        private static bool ReadSapStatus()
+        {
+            bool success = false;
+
+            string[] status = SAP.GetStatusBarInfo();
+            string statusType = status[0];
+            string statusText = status[1];
+
+            switch (statusType)
+            {
+                case "S": // Success
+                    MessageBox.Show(statusText, "Onnistuminen");
+                    success = true;
+                    break;
+                case "W": // Warning
+                    MessageBox.Show(statusText, "Varoitus", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    break;
+                case "E": // Error
+                    MessageBox.Show("Tallennus epäonnistui. \n\n" + statusText, "Virhe", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    break;
+                case "A": // Abort
+                    MessageBox.Show(statusText, "Keskeytys", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                    break;
+                case "I": // Information
+                    MessageBox.Show(statusText, "Informaatio", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    break;
+            }
+
+            return success;
+        }
+
+        #region GUI
+        // Resetoi Luo ilmoitus-lomake
+        private void ClearFormCreateWorkOrder()
+        {
+            cbLaitehaku.Text = "";
+            tbLaitehaku.Text = "";
+
+            tbKuvaus.Text = "";
+            tbPitkaTeksti.Text = "";
+
+            cbToimintolaji.SelectedIndex = 0;
+            cbPrioriteetti.SelectedIndex = 2;
+            cbTilauslaji.SelectedIndex = 1;
+            cbJarjestelmatila.SelectedIndex = 2;
+        }
+        private void ClearConfirmWorkOrder()
+        {
+            tbTilausnumero.Text = string.Empty;
+            cbAloitusaika.Text = string.Empty;
+            cbLopetusaika.Text = string.Empty;
+            cbHenkilo.Text = string.Empty;
+            cbKirjaaTuntejaToimintolaji.Text = string.Empty;
+            tbVahvistusteksti.Text = string.Empty;
+            checkBoxLoppuvahvistus.Checked = false;
+            dgVaraosienPoisto.Rows.Clear();
+        }
+        private void PrefillOpenWorkOrder(OpenWorkOrder Order)
+        {
+            tbTilausnumero.Text = Order.id;
+            tbTyokuvaus.Text = Order.kuvaus;
+            tbLaite.Text = Order.laite;
+            tbLaiteKuvaus.Text = Order.laiteKuvaus;
+        }
+        // Täytä käyttäjäpudotusvalikot
+        private void UpdateUserComboBox()
+        {
+
+            using var db = new LiteDatabase(Properties.Settings.Default.Tietokantapolku);
+
+            var users = db.GetCollection<User>("users")
+                .Find(x => x.show == true)
+                .Select(x => new UserItem { DisplayText = $"{x.name}", Value = (x.id ?? 0) })
+                .ToList();
+
+            users.Sort();
+            users.Insert(0, new UserItem { DisplayText = "", Value = 0 }); // Tyhjä kenttä ensimmäiseksi, pakottaa käyttäjän valitsemaan.
+            cbHenkilo.DataSource = users;
+            cbKirjaaPaivaHenkilo.DataSource = users;
+
+            if (Properties.Settings.Default.ViimeisinKayttaja > 0)
+                cbHenkilo.SelectedValue = Properties.Settings.Default.ViimeisinKayttaja;
+        }
+        private void UpdateOpenWorkOrderList()
+        {
+            using var db = new LiteDatabase(Properties.Settings.Default.Tietokantapolku);
+            var workOrders = db.GetCollection<OpenWorkOrder>("openworkorders");
+
+            dgOpenWorkOrders.DataSource = workOrders.FindAll().OrderByDescending(x => x.id).ToList();
+        }
+        private void OpenConfirmWorkOrderTab(string OrderId)
+        {
+            OpenWorkOrder order = new() // TODO: testidataa, hae kannasta tarvittavat tiedot
+            {
+                id = OrderId,
+                kuvaus = "TekstiKuvaus",
+                laite = "12345",
+                laiteKuvaus = "LaiteKuvaus"
+            };
+            PrefillOpenWorkOrder(order);
+            tabControlMain.SelectedIndex = 1;
+        }
+        // Avaa tuntien kirjauslomake avoimien töiden sivulta
+        private void FillTimeComboboxes()
+        {
+            List<int> hoursAloitus = new();
+            for (int hour = 0; hour < 24; hour++)
+            {
+                hoursAloitus.Add(hour);
+            }
+
+            List<int> hoursLopetus = new(hoursAloitus);
+            hoursLopetus.Remove(0);
+            hoursLopetus.Add(24);
+
+            cbAloitusaika.DataSource = hoursAloitus;
+            cbLopetusaika.DataSource = hoursLopetus;
+        }
+        #endregion
+
+        #region Buttons
+        private void btnKirjaaTunnit_Click(object sender, EventArgs e)
+        {
+            ConfirmWorkOrder();
+        }
+        private void btnKirjaaTunnitNoClear_Click(object sender, EventArgs e)
+        {
+            ConfirmWorkOrder(false);
+        }
+        private void btnKirjaaPaiva_Click(object sender, EventArgs e)
+        {
+            // TODO: toimintolaji, kopioit kirjaa tunnit
+            // TODO: henkilöt, kopioi kirjaa tunnit
+            // TODO: luo tuntimäärä -> kellonajat, ja muista mitkä on käytetty
+        }
+        private void btnOpenWorkOrdersRefresh_Click(object sender, EventArgs e)
+        {
+            FetchOpenWorkOrders();
+        }
         private void btnLuo_Click(object sender, EventArgs e)
         {
             CreateWorkOrder(false, true);
@@ -993,6 +1116,77 @@ namespace InvaSAP
 
         }
 
+        private void btnAvoimetTyotTulosta_Click(object sender, EventArgs e)
+        {
+            // TODO: tulosta työtilauspaperi listan valitusta työstä
+        }
+        private void btnKirjaaTunteja_Click(object sender, EventArgs e)
+        {
+            DataGridViewCell currentCell = dgOpenWorkOrders.CurrentCell;
+
+            if (currentCell != null)
+            {
+                if (dgOpenWorkOrders.Rows.Count > 0)
+                {
+                    DataGridViewRow row = currentCell.OwningRow;
+                    DataGridViewCell cell = row.Cells[0];
+                    string orderId = (string)cell.Value;
+
+                    OpenConfirmWorkOrderTab(orderId); // TODO: siirrä kaikki tarvittavat tiedot
+                }
+            }
+            else
+            {
+                MessageBox.Show("Valitse ensin rivi. Voit myös kaksoisklikata haluamaasi riviä.");
+            }
+        }
+        private void btnResetUsers_Click(object sender, EventArgs e)
+        {
+            ResetUsers(Kayttajat);
+        }
+        #endregion
+
+        #region AfterSelect
+        private void treeLaitepuu_AfterSelect(object? sender, TreeViewEventArgs e)
+        {
+            if (e.Node == null)
+                tbLaitehaku.Text = "";
+            else
+                tbLaitehaku.Text = e.Node.Text;
+        }
+        #endregion
+
+        #region CellDoubleClick
+        private void DataGridViewOpenWorkOrders_CellDoubleClick(object sender, DataGridViewCellEventArgs e)
+        {
+            if (e.RowIndex >= 0 && e.ColumnIndex >= 0)
+            {
+                DataGridViewCell cell = dgOpenWorkOrders.Rows[e.RowIndex].Cells[0];
+                string orderId = (string)cell.Value;
+
+                OpenConfirmWorkOrderTab(orderId); // TODO: siirrä kaikki tarvittavat tiedot
+            }
+        }
+        #endregion
+
+        #region CellValueChanged
+        // Päivitä tietokantaan, kun Asetukset-tabin käyttäjälistalla vaihdetaan näkyvyysarvoa.
+        private void dgUsers_CellValueChanged(object sender, DataGridViewCellEventArgs e)
+        {
+            using var db = new LiteDatabase(Properties.Settings.Default.Tietokantapolku);
+
+            if (e.RowIndex >= 0 && e.ColumnIndex == dgUsers.Columns["show"].Index)
+            {
+                User user = (User)dgUsers.Rows[e.RowIndex].DataBoundItem;
+                bool show = (bool)dgUsers.Rows[e.RowIndex].Cells[e.ColumnIndex].Value;
+                user.show = show;
+                db.GetCollection<User>("users").Update(user);
+            }
+        }
+
+        #endregion
+
+        #region OnNodeMouseClick
         private void treeLaitepuu_OnNodeMouseClick(object sender, TreeNodeMouseClickEventArgs e)
         {
             var hitTest = e.Node.TreeView.HitTest(e.Location);
@@ -1004,58 +1198,82 @@ namespace InvaSAP
             else
                 e.Node.Expand();
         }
+        #endregion
 
-        private void btnOpenWorkOrdersRefresh_Click(object sender, EventArgs e)
+        #region RowsAdded
+        private void dgVaraosienPoisto_RowsAdded(object sender, DataGridViewRowsAddedEventArgs e)
         {
-            FetchOpenWorkOrders();
-        }
-        private void treeLaitepuu_AfterSelect(object? sender, TreeViewEventArgs e)
-        {
-            if (e.Node == null)
-                tbLaitehaku.Text = "";
-            else
-                tbLaitehaku.Text = e.Node.Text;
-        }
+            DataGridView dataGridView = (DataGridView)sender;
 
-        // EH Windowsin ikkunan avaamisen tunnistukseen
-        private static void OnWindowOpened(object sender, AutomationEventArgs automationEventArgs)
+            DataGridViewRow newRow = dataGridView.Rows[e.RowIndex - 1];
+            newRow.Cells["count"].Value = 1;
+            newRow.Cells["unit"].Value = "KPL";
+        }
+        #endregion
+
+        #region SelectedIndexChanged
+        private void cbAloitusaika_SelectedIndexChanged(object sender, EventArgs e)
         {
-            try
+            int selectedHour = (int)cbAloitusaika.SelectedItem;
+            cbLopetusaika.SelectedItem = selectedHour + 1;
+        }
+        private void cbLopetusaika_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            int selectedHour = (int)cbLopetusaika.SelectedItem;
+            if (cbAloitusaika.SelectedItem != null)
             {
-                AutomationElement? element = sender as AutomationElement ?? throw new NullReferenceException($"AutomationElement sender was null.");
-                Debug.WriteLine("New window opened: " + element.Current.Name);
-                IntPtr windowHandle = new(element.Current.NativeWindowHandle);
-
-                switch (element.Current.Name)
+                int selectedStartingTime = (int)cbAloitusaika.SelectedItem;
+                if (selectedHour <= selectedStartingTime)
                 {
-                    case "Tulosta":
-                        try
-                        {
-                            // Etsi OK-painike sen luokan ja tekstin perusteella.
-                            IntPtr okButtonHandle = FindWindowEx(windowHandle, IntPtr.Zero, "Button", "OK");
-
-                            // Paina OK-painiketta.
-                            SendMessage(okButtonHandle, BM_CLICK, IntPtr.Zero, IntPtr.Zero);
-                        }
-                        catch
-                        {
-                            Debug.WriteLine("Exception in OnWindowOpened (Automation Eventhandler)");
-                        };
-                        break;
-
-                    case "SAP Logon 770":
-                        ShowWindowAsync(windowHandle, SW_SHOWMINIMIZED);
-                        break;
+                    MessageBox.Show("Lopetusaika ei voi olla sama tai aikaisemmin kuin aloitusaika. Tarkista syötetyt ajat.", "Virheellinen arvo");
+                    return;
                 }
-
             }
-            catch (NullReferenceException ex)
+        }
+        private void tabControlMain_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            switch (((TabControl)sender).SelectedIndex)
             {
-                Debug.WriteLine($"NullReferenceException in OnWindowOpened-eventhandler: {ex.Message}");
-                throw;
+                case 0: // Luo työtilaus
+                    UpdateMachineTreeview();
+                    break;
+                case 1: // Kirjaa tunteja
+                    UpdateUserComboBox();
+                    if (Properties.Settings.Default.ViimeisinToimintolaji != "")
+                        cbKirjaaTuntejaToimintolaji.SelectedValue = Properties.Settings.Default.ViimeisinToimintolaji;
+
+                    break;
+                case 2: // Kirjaa päivä
+                    UpdateUserComboBox();
+                    break;
+                case 3: // Avoimet työtilaukset
+                    UpdateOpenWorkOrderList();
+                    break;
+                case 4: // Asetukset
+                    break;
+
             }
         }
 
+        #endregion
+
+        #region TextChanged
+        private void tbLaitehakuVariantti_TextChanged(object sender, EventArgs e)
+        {
+            Properties.Settings.Default.AsetuksetLaitehakuVariantti = tbLaitehakuVariantti.Text.Trim();
+            Properties.Settings.Default.Save();
+        }
+        private void tbAsetuksetVariantti_TextChanged(object sender, EventArgs e)
+        {
+            Properties.Settings.Default.AsetuksetAvoimetTyotVariantti = tbAsetuksetVariantti.Text.Trim();
+            Properties.Settings.Default.Save();
+        }
+
+        private void tbAsetuksetToimipaikka_TextChanged(object sender, EventArgs e)
+        {
+            Properties.Settings.Default.Toimipaikka = tbAsetuksetToimipaikka.Text.Trim();
+            Properties.Settings.Default.Save();
+        }
         // Avaa laitepuun solmut myös klikkaamalla tekstiä eikä vain plussa-ikonia
         private void tbOpenWorkOrdersFunctionalLocation_TextChanged(object sender, EventArgs e)
         {
@@ -1107,199 +1325,8 @@ namespace InvaSAP
             tbOpenWorkOrdersFunctionalLocation.Text = txt;
         }
 
-        private void tabControlMain_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            switch (((TabControl)sender).SelectedIndex)
-            {
-                case 0: // Luo työtilaus
-                    UpdateMachineTreeview();
-                    break;
-                case 1: // Kirjaa tunteja
-                    UpdateUserComboBox();
-                    if (Properties.Settings.Default.ViimeisinToimintolaji != "")
-                        cbKirjaaTuntejaToimintolaji.SelectedValue = Properties.Settings.Default.ViimeisinToimintolaji;
 
-                    break;
-                case 2: // Kirjaa päivä
-                    UpdateUserComboBox();
-                    break;
-                case 3: // Avoimet työtilaukset
-                    UpdateOpenWorkOrderList();
-                    break;
-                case 4: // Asetukset
-                    break;
-
-            }
-        }
-
-        // Täytä käyttäjäpudotusvalikot
-        private void UpdateUserComboBox()
-        {
-
-            using var db = new LiteDatabase(Properties.Settings.Default.Tietokantapolku);
-
-            var users = db.GetCollection<User>("users")
-                .Find(x => x.show == true)
-                .Select(x => new UserItem { DisplayText = $"{x.name}", Value = (x.id ?? 0) })
-                .ToList();
-
-            users.Sort();
-            users.Insert(0, new UserItem { DisplayText = "", Value = 0 }); // Tyhjä kenttä ensimmäiseksi, pakottaa käyttäjän valitsemaan.
-            cbHenkilo.DataSource = users;
-            cbKirjaaPaivaHenkilo.DataSource = users;
-
-            if (Properties.Settings.Default.ViimeisinKayttaja > 0)
-                cbHenkilo.SelectedValue = Properties.Settings.Default.ViimeisinKayttaja;
-        }
-
-        private void UpdateOpenWorkOrderList()
-        {
-            using var db = new LiteDatabase(Properties.Settings.Default.Tietokantapolku);
-            var workOrders = db.GetCollection<OpenWorkOrder>("openworkorders");
-
-            dgOpenWorkOrders.DataSource = workOrders.FindAll().OrderByDescending(x => x.id).ToList();
-        }
-
-        private void OpenConfirmWorkOrderTab(string OrderId)
-        {
-            OpenWorkOrder order = new() // TODO: testidataa, hae kannasta tarvittavat tiedot
-            {
-                id = OrderId,
-                kuvaus = "TekstiKuvaus",
-                laite = "12345",
-                laiteKuvaus = "LaiteKuvaus"
-            };
-            PrefillOpenWorkOrder(order);
-            tabControlMain.SelectedIndex = 1;
-        }
-        // Avaa tuntien kirjauslomake avoimien töiden sivulta
-        private void btnKirjaaTunteja_Click(object sender, EventArgs e)
-        {
-            DataGridViewCell currentCell = dgOpenWorkOrders.CurrentCell;
-
-            if (currentCell != null)
-            {
-                if (dgOpenWorkOrders.Rows.Count > 0)
-                {
-                    DataGridViewRow row = currentCell.OwningRow;
-                    DataGridViewCell cell = row.Cells[0];
-                    string orderId = (string)cell.Value;
-
-                    OpenConfirmWorkOrderTab(orderId); // TODO: siirrä kaikki tarvittavat tiedot
-                }
-            }
-            else
-            {
-                MessageBox.Show("Valitse ensin rivi. Voit myös kaksoisklikata haluamaasi riviä.");
-            }
-        }
-
-
-        private void DataGridViewOpenWorkOrders_CellDoubleClick(object sender, DataGridViewCellEventArgs e)
-        {
-            if (e.RowIndex >= 0 && e.ColumnIndex >= 0)
-            {
-                DataGridViewCell cell = dgOpenWorkOrders.Rows[e.RowIndex].Cells[0];
-                string orderId = (string)cell.Value;
-
-                OpenConfirmWorkOrderTab(orderId); // TODO: siirrä kaikki tarvittavat tiedot
-            }
-        }
-
-        private void btnResetUsers_Click(object sender, EventArgs e)
-        {
-            ResetUsers(Kayttajat);
-        }
-        // Päivitä tietokantaan, kun Asetukset-tabin käyttäjälistalla vaihdetaan näkyvyysarvoa.
-        private void dgUsers_CellValueChanged(object sender, DataGridViewCellEventArgs e)
-        {
-            using var db = new LiteDatabase(Properties.Settings.Default.Tietokantapolku);
-
-            if (e.RowIndex >= 0 && e.ColumnIndex == dgUsers.Columns["show"].Index)
-            {
-                User user = (User)dgUsers.Rows[e.RowIndex].DataBoundItem;
-                bool show = (bool)dgUsers.Rows[e.RowIndex].Cells[e.ColumnIndex].Value;
-                user.show = show;
-                db.GetCollection<User>("users").Update(user);
-            }
-        }
-
-        private void btnKirjaaTunnit_Click(object sender, EventArgs e)
-        {
-            ConfirmWorkOrder();
-        }
-        private void btnKirjaaTunnitNoClear_Click(object sender, EventArgs e)
-        {
-            ConfirmWorkOrder(false);
-        }
-
-        private void dgVaraosienPoisto_RowsAdded(object sender, DataGridViewRowsAddedEventArgs e)
-        {
-            DataGridView dataGridView = (DataGridView)sender;
-
-            DataGridViewRow newRow = dataGridView.Rows[e.RowIndex - 1];
-            newRow.Cells["count"].Value = 1;
-            newRow.Cells["unit"].Value = "KPL";
-        }
-
-        private void FillTimeComboboxes()
-        {
-            List<int> hoursAloitus = new();
-            for (int hour = 0; hour < 24; hour++)
-            {
-                hoursAloitus.Add(hour);
-            }
-
-            List<int> hoursLopetus = new(hoursAloitus);
-            hoursLopetus.Remove(0);
-            hoursLopetus.Add(24);
-
-            cbAloitusaika.DataSource = hoursAloitus;
-            cbLopetusaika.DataSource = hoursLopetus;
-        }
-
-        private void cbAloitusaika_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            int selectedHour = (int)cbAloitusaika.SelectedItem;
-            cbLopetusaika.SelectedItem = selectedHour + 1;
-        }
-        private void cbLopetusaika_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            int selectedHour = (int)cbLopetusaika.SelectedItem;
-            if (cbAloitusaika.SelectedItem != null)
-            {
-                int selectedStartingTime = (int)cbAloitusaika.SelectedItem;
-                if (selectedHour <= selectedStartingTime)
-                {
-                    MessageBox.Show("Lopetusaika ei voi olla sama tai aikaisemmin kuin aloitusaika. Tarkista syötetyt ajat.", "Virheellinen arvo");
-                    return;
-                }
-            }
-        }
-
-        private void tbAsetuksetVariantti_TextChanged(object sender, EventArgs e)
-        {
-            Properties.Settings.Default.AsetuksetAvoimetTyotVariantti = tbAsetuksetVariantti.Text.Trim();
-            Properties.Settings.Default.Save();
-        }
-
-        private void tbAsetuksetToimipaikka_TextChanged(object sender, EventArgs e)
-        {
-            Properties.Settings.Default.Toimipaikka = tbAsetuksetToimipaikka.Text.Trim();
-            Properties.Settings.Default.Save();
-        }
-
-        private void btnKirjaaPaiva_Click(object sender, EventArgs e)
-        {
-            // TODO: toimintolaji, kopioit kirjaa tunnit
-            // TODO: henkilöt, kopioi kirjaa tunnit
-            // TODO: luo tuntimäärä -> kellonajat, ja muista mitkä on käytetty
-        }
-
-        private void btnAvoimetTyotTulosta_Click(object sender, EventArgs e)
-        {
-            // TODO: tulosta työtilauspaperi listan valitusta työstä
-        }
+        #endregion
 
     }
 }
