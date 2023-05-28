@@ -2,13 +2,9 @@
 using Newtonsoft.Json;
 using SAPFEWSELib;
 using System.Diagnostics;
-using System.Reflection.PortableExecutable;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using System.Windows.Automation;
-using System.Windows.Forms;
-using System.Xml.Linq;
-using static System.ComponentModel.Design.ObjectSelectorEditor;
 
 namespace InvaSAP
 {
@@ -160,9 +156,15 @@ namespace InvaSAP
             Tilauslajit = JsonConvert.DeserializeObject<Dictionary<string, string>>(data["Tilauslajit"].ToString() ?? string.Empty) ?? new Dictionary<string, string>();
             Jarjestelmatilat = JsonConvert.DeserializeObject<Dictionary<string, string>>(data["Jarjestelmatilat"].ToString() ?? string.Empty) ?? new Dictionary<string, string>();
             Kayttajat = JsonConvert.DeserializeObject<List<User>>(data["Kayttajat"].ToString() ?? string.Empty) ?? new List<User> { };
-            AvoimetTyotVariantti = JsonConvert.DeserializeObject<dynamic>(json).AvoimetTyotVariantti.ToString() ?? "/KUPITIL";
-            LaitehakuVariantti = JsonConvert.DeserializeObject<dynamic>(json).LaitehakuVariantti.ToString() ?? "/IDJAKUVAUS";
-            Toimipaikka = JsonConvert.DeserializeObject<dynamic>(json).Toimipaikka.ToString() ?? "7010";
+
+            //AvoimetTyotVariantti = JsonConvert.DeserializeObject<dynamic>(json).AvoimetTyotVariantti.ToString() ?? "/KUPITIL";
+            //LaitehakuVariantti = JsonConvert.DeserializeObject<dynamic>(json).LaitehakuVariantti.ToString() ?? "/IDJAKUVAUS";
+            //Toimipaikka = JsonConvert.DeserializeObject<dynamic>(json).Toimipaikka.ToString() ?? "7010";
+            dynamic? deserializedJson = JsonConvert.DeserializeObject<dynamic>(json);
+            LaitehakuVariantti = deserializedJson?.LaitehakuVariantti?.ToString() ?? "/IDJAKUVAUS";
+            AvoimetTyotVariantti = deserializedJson?.AvoimetTyotVariantti.ToString() ?? "/KUPITIL";
+            Toimipaikka = deserializedJson?.Toimipaikka.ToString() ?? "7010";
+
         }
         public FormMain()
         {
@@ -784,26 +786,19 @@ namespace InvaSAP
 
                     string workOrderNumber = grid.GetCellValue(i, "AUFNR"); // Tilaus
                     string workOrderText = grid.GetCellValue(i, "KTEXT"); // Lyhyt teksti
-                    string machine = grid.GetCellValue(i, "EQUNR"); // Laite
-
-                    OpenWorkOrder wo = new()
-                    {
-                        id = workOrderNumber,
-                        kuvaus = workOrderText,
-                        laite = machine
-                    };
+                    string machineId = grid.GetCellValue(i, "EQUNR"); // Laite
+                    string machineDesc = "";
 
                     // Hae laitteen nimi tietokannasta käyttäen laiteID:tä
-                    if (wo.laite != "")
+                    if (machineId != "")
                     {
-                        MachineTreeNode node = nodes.FindOne(x => x.id == wo.laite);
+                        MachineTreeNode node = nodes.FindOne(x => x.id == machineId);
                         if (node != null && node.name != null)
-                            wo.laiteKuvaus = node.name;
+                            machineDesc = node.name;
                         else
-                            wo.laiteKuvaus = "[Tunnistamaton laite]";
+                            machineDesc = "[Tunnistamaton laite]";
                     }
-
-                    workOrders.Insert(wo); // TODO: muuta käyttämään DatabaseInsertNewWorkOrder()
+                    DatabaseInsertNewWorkOrder(workOrderNumber, workOrderText, machineId, machineDesc);
                 }
 
                 SAP.Close();
@@ -1030,15 +1025,11 @@ namespace InvaSAP
         }
         private void OpenConfirmWorkOrderTab(string OrderId)
         {
-            OpenWorkOrder order = new() // TODO: testidataa, hae kannasta tarvittavat tiedot
-            {
-                id = OrderId,
-                kuvaus = "TekstiKuvaus",
-                laite = "12345",
-                laiteKuvaus = "LaiteKuvaus"
-            };
-            PrefillOpenWorkOrder(order);
-            tabControlMain.SelectedIndex = 1;
+            using var db = new LiteDatabase(Properties.Settings.Default.Tietokantapolku);
+            var workOrders = db.GetCollection<OpenWorkOrder>("openworkorders");
+            OpenWorkOrder workorder = workOrders.FindOne(x => x.id == OrderId);
+            PrefillOpenWorkOrder(workorder);
+            tabControlMain.SelectedTab = tabKirjaaTunteja;
         }
         // Avaa tuntien kirjauslomake avoimien töiden sivulta
         private void FillTimeComboboxes()
@@ -1069,8 +1060,6 @@ namespace InvaSAP
         }
         private void btnKirjaaPaiva_Click(object sender, EventArgs e)
         {
-            // TODO: toimintolaji, kopioit kirjaa tunnit
-            // TODO: henkilöt, kopioi kirjaa tunnit
             // TODO: luo tuntimäärä -> kellonajat, ja muista mitkä on käytetty
         }
         private void btnOpenWorkOrdersRefresh_Click(object sender, EventArgs e)
@@ -1083,7 +1072,6 @@ namespace InvaSAP
         }
         private async void btnLuoTyoJaVahvista_Click(object sender, EventArgs e)
         {
-            // TODO: poista messagebox luodusta työstä
             tbTyokuvaus.Text = tbKuvaus.Text;
             TreeNode selectedNode = treeLaitepuu.SelectedNode;
             MachineTreeNode machine = (MachineTreeNode)selectedNode.Tag;
@@ -1132,7 +1120,7 @@ namespace InvaSAP
                     DataGridViewCell cell = row.Cells[0];
                     string orderId = (string)cell.Value;
 
-                    OpenConfirmWorkOrderTab(orderId); // TODO: siirrä kaikki tarvittavat tiedot
+                    OpenConfirmWorkOrderTab(orderId);
                 }
             }
             else
@@ -1164,7 +1152,7 @@ namespace InvaSAP
                 DataGridViewCell cell = dgOpenWorkOrders.Rows[e.RowIndex].Cells[0];
                 string orderId = (string)cell.Value;
 
-                OpenConfirmWorkOrderTab(orderId); // TODO: siirrä kaikki tarvittavat tiedot
+                OpenConfirmWorkOrderTab(orderId);
             }
         }
         #endregion
@@ -1208,6 +1196,17 @@ namespace InvaSAP
             DataGridViewRow newRow = dataGridView.Rows[e.RowIndex - 1];
             newRow.Cells["count"].Value = 1;
             newRow.Cells["unit"].Value = "KPL";
+        }
+        private void dgKirjaaPaiva_RowsAdded(object sender, DataGridViewRowsAddedEventArgs e)
+        {
+            DataGridView dataGridView = (DataGridView)sender;
+            DataGridViewRow newRow = dataGridView.Rows[e.RowIndex - 1];
+            newRow.Cells["Tunnit"].Value = 1;
+            if (dataGridView.Rows.Count > 2)
+            {
+                DataGridViewRow prevRow = dataGridView.Rows[e.RowIndex - 2];
+                newRow.Cells["Toimintolaji"].Value = prevRow.Cells["Toimintolaji"].Value;
+            }
         }
         #endregion
 

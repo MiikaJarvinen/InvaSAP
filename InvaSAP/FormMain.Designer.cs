@@ -919,6 +919,7 @@
             dgKirjaaPaiva.SelectionMode = DataGridViewSelectionMode.CellSelect;
             dgKirjaaPaiva.Size = new Size(970, 551);
             dgKirjaaPaiva.TabIndex = 26;
+            dgKirjaaPaiva.RowsAdded += dgKirjaaPaiva_RowsAdded;
             // 
             // dataGridViewTextBoxColumn2
             // 
