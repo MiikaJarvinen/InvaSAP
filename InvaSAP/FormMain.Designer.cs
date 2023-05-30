@@ -152,6 +152,7 @@
             tbLog = new TextBox();
             btnHaeLaitepuu = new Button();
             btnResetUsers = new Button();
+            splitContainerUserList = new SplitContainer();
             tabControlMain.SuspendLayout();
             tabLuoTyotilaus.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)splitContainerLuoTyotilaus).BeginInit();
@@ -197,6 +198,10 @@
             groupBox4.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)dgUsers).BeginInit();
             groupBox2.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)splitContainerUserList).BeginInit();
+            splitContainerUserList.Panel1.SuspendLayout();
+            splitContainerUserList.Panel2.SuspendLayout();
+            splitContainerUserList.SuspendLayout();
             SuspendLayout();
             // 
             // tabControlMain
@@ -1155,7 +1160,6 @@
             // splitContainerAsetukset.Panel2
             // 
             splitContainerAsetukset.Panel2.Controls.Add(splitContainerAsetuksetInnerRight);
-            splitContainerAsetukset.Panel2.Controls.Add(btnResetUsers);
             splitContainerAsetukset.Size = new Size(970, 627);
             splitContainerAsetukset.SplitterDistance = 300;
             splitContainerAsetukset.TabIndex = 16;
@@ -1365,7 +1369,7 @@
             // 
             // groupBox4
             // 
-            groupBox4.Controls.Add(dgUsers);
+            groupBox4.Controls.Add(splitContainerUserList);
             groupBox4.Dock = DockStyle.Fill;
             groupBox4.Location = new Point(0, 0);
             groupBox4.Name = "groupBox4";
@@ -1386,12 +1390,12 @@
             dgUsers.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             dgUsers.Columns.AddRange(new DataGridViewColumn[] { id, name, show });
             dgUsers.Dock = DockStyle.Fill;
-            dgUsers.Location = new Point(3, 19);
+            dgUsers.Location = new Point(0, 0);
             dgUsers.Name = "dgUsers";
             dgUsers.RowHeadersVisible = false;
             dgUsers.RowHeadersWidthSizeMode = DataGridViewRowHeadersWidthSizeMode.DisableResizing;
             dgUsers.RowTemplate.Height = 25;
-            dgUsers.Size = new Size(327, 605);
+            dgUsers.Size = new Size(327, 560);
             dgUsers.TabIndex = 15;
             dgUsers.CellValueChanged += dgUsers_CellValueChanged;
             // 
@@ -1487,13 +1491,32 @@
             // 
             // btnResetUsers
             // 
-            btnResetUsers.Location = new Point(58, 563);
+            btnResetUsers.Dock = DockStyle.Fill;
+            btnResetUsers.Location = new Point(0, 0);
             btnResetUsers.Name = "btnResetUsers";
-            btnResetUsers.Size = new Size(373, 38);
+            btnResetUsers.Size = new Size(327, 41);
             btnResetUsers.TabIndex = 16;
             btnResetUsers.Text = "Resetoi käyttäjälistaus";
             btnResetUsers.UseVisualStyleBackColor = true;
             btnResetUsers.Click += btnResetUsers_Click;
+            // 
+            // splitContainerUserList
+            // 
+            splitContainerUserList.Dock = DockStyle.Fill;
+            splitContainerUserList.Location = new Point(3, 19);
+            splitContainerUserList.Name = "splitContainerUserList";
+            splitContainerUserList.Orientation = Orientation.Horizontal;
+            // 
+            // splitContainerUserList.Panel1
+            // 
+            splitContainerUserList.Panel1.Controls.Add(btnResetUsers);
+            // 
+            // splitContainerUserList.Panel2
+            // 
+            splitContainerUserList.Panel2.Controls.Add(dgUsers);
+            splitContainerUserList.Size = new Size(327, 605);
+            splitContainerUserList.SplitterDistance = 41;
+            splitContainerUserList.TabIndex = 16;
             // 
             // FormMain
             // 
@@ -1560,6 +1583,10 @@
             ((System.ComponentModel.ISupportInitialize)dgUsers).EndInit();
             groupBox2.ResumeLayout(false);
             groupBox2.PerformLayout();
+            splitContainerUserList.Panel1.ResumeLayout(false);
+            splitContainerUserList.Panel2.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)splitContainerUserList).EndInit();
+            splitContainerUserList.ResumeLayout(false);
             ResumeLayout(false);
         }
 
@@ -1688,5 +1715,6 @@
         private DataGridViewComboBoxColumn Toimintolaji;
         private Label label33;
         private TextBox tbLaitehakuVariantti;
+        private SplitContainer splitContainerUserList;
     }
 }

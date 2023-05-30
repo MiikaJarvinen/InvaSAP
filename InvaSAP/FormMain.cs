@@ -141,7 +141,6 @@ namespace InvaSAP
         private static string AvoimetTyotVariantti;
         private static string LaitehakuVariantti;
         private static string Toimipaikka;
-        #endregion
         public static void LoadDefaultDataFromJSON()
         {
             string filePath = "Config.json";
@@ -166,6 +165,7 @@ namespace InvaSAP
             Toimipaikka = deserializedJson?.Toimipaikka.ToString() ?? "7010";
 
         }
+        #endregion
         public FormMain()
         {
             // Lataa Config.json:sta oletusarvoja
@@ -212,25 +212,19 @@ namespace InvaSAP
             else
                 tbAsetuksetToimipaikka.Text = Properties.Settings.Default.Toimipaikka;
 
-            using var db = new LiteDatabase(Properties.Settings.Default.Tietokantapolku);
+            using (var db = new LiteDatabase(Properties.Settings.Default.Tietokantapolku))
+            {
 
-            // Täytä käyttäjät tietokantaan
-            var users = db.GetCollection<User>("users");
-            if (users.Count() == 0)
-            {
-                ResetUsers(Kayttajat);
-            }
-            else
-            {
-                // Päivitä Asetukset-tabin käyttäjälista.
-                dgUsers.DataSource = db.GetCollection<User>("users").FindAll().ToList();
-                dgUsers.Refresh();
+                // Hae laitepuusolmut tietokannasta ja kasaa puu GUI:ssa
+                var nodes = db.GetCollection<MachineTreeNode>("nodes").FindAll().ToList();
+                treeLaitepuu.AfterSelect += new TreeViewEventHandler(treeLaitepuu_AfterSelect);
+                UpdateMachineTreeview(nodes, "");
+
+                // Täytä Avoimet työtilaukset listanäkymä töillä tietokannasta.
+                dgOpenWorkOrders.DataSource = db.GetCollection<OpenWorkOrder>("openworkorders").FindAll().OrderByDescending(o => o.id).ToList();
             }
 
-            // Hae laitepuusolmut tietokannasta ja kasaa puu GUI:ssa
-            var nodes = db.GetCollection<MachineTreeNode>("nodes").FindAll().ToList();
-            treeLaitepuu.AfterSelect += new TreeViewEventHandler(treeLaitepuu_AfterSelect);
-            UpdateMachineTreeview(nodes, "");
+            FillUserList();
 
             // Täydennä tallennetut arvot Avoimet työtilaukset-sivulle.
             tbOpenWorkOrdersFunctionalLocation.Text = Properties.Settings.Default.OpenWorkOrdersFunctionalLocation;
@@ -245,9 +239,6 @@ namespace InvaSAP
             tbLoppupaiva.Text = DateTime.Today.AddDays(7).ToString("dd.MM.yyyy");
             tbAlkuaika.Text = "00:00:00";
             tbLoppuaika.Text = "00:00:00";
-
-            // Täytä Avoimet työtilaukset listanäkymä töillä tietokannasta.
-            dgOpenWorkOrders.DataSource = db.GetCollection<OpenWorkOrder>("openworkorders").FindAll().OrderByDescending(o => o.id).ToList();
 
             // Henkilö comboboxit
             cbHenkilo.DisplayMember = "DisplayText";
@@ -275,12 +266,20 @@ namespace InvaSAP
 
             cbPrioriteetti.DisplayMember = "DisplayText";
             cbPrioriteetti.ValueMember = "Value";
-            cbPrioriteetti.DataSource = Prioriteetit.Select(x => new { DisplayText = $"{x.Key} {x.Value}", Value = x.Key }).ToList();
+            cbPrioriteetti.DataSource = Prioriteetit.Select(x => new
+            {
+                DisplayText = $"{x.Key} {x.Value}",
+                Value = x.Key
+            }).ToList();
             cbPrioriteetti.SelectedIndex = 2;
 
             cbTilauslaji.DisplayMember = "DisplayText";
             cbTilauslaji.ValueMember = "Value";
-            cbTilauslaji.DataSource = Tilauslajit.Select(x => new { DisplayText = $"{x.Key} {x.Value}", Value = x.Key }).ToList();
+            cbTilauslaji.DataSource = Tilauslajit.Select(x => new
+            {
+                DisplayText = $"{x.Key} {x.Value}",
+                Value = x.Key
+            }).ToList();
             cbTilauslaji.SelectedIndex = 1;
 
             cbJarjestelmatila.DisplayMember = "DisplayText";
@@ -303,6 +302,7 @@ namespace InvaSAP
             treeLaitepuu.Nodes.Clear();
             List<MachineTreeNode> allNodes = db.GetCollection<MachineTreeNode>("nodes").FindAll().ToList();
             UpdateMachineTreeview(allNodes, "");
+            //db.Dispose();
         }
         private void UpdateMachineTreeview(List<MachineTreeNode> nodes, string searchCriteria)
         {
@@ -571,12 +571,13 @@ namespace InvaSAP
         // Hae laite ja toimipaikka tiedot SAPista ja tallenna ne paikalliseen tietokantaan.
         private async void FetchMachineAndLocationDataFromSAP()
         {
-            using var db = new LiteDatabase(Properties.Settings.Default.Tietokantapolku);
             btnHaeLaitepuu.Enabled = false;
 
             // Tyhjennä tietokanta
+            using var db = new LiteDatabase(Properties.Settings.Default.Tietokantapolku);
             var nodes = db.GetCollection<MachineTreeNode>("nodes");
             nodes.DeleteAll();
+            //db.Dispose();
 
             tbLog.AppendText("Avataan SAP." + Environment.NewLine);
             await SAP.Open();
@@ -719,15 +720,14 @@ namespace InvaSAP
         // Hae avoimet työt SAPista ja päivitä listaus Avoimet Työt-sivulle.
         private async void FetchOpenWorkOrders()
         {
+            ILiteCollection<OpenWorkOrder> workOrders;
             using var db = new LiteDatabase(Properties.Settings.Default.Tietokantapolku);
-
-            // Tyhjennä avoimien töiden taulu tietokannassa.
-            var workOrders = db.GetCollection<OpenWorkOrder>("openworkorders");
+            workOrders = db.GetCollection<OpenWorkOrder>("openworkorders");
             workOrders.DeleteAll();
+            db.Dispose();
 
-            // Laitteen laajemmat tiedot tietokannasta, koska työtilauksessa ei näy kuin laiteID.
-            var nodes = db.GetCollection<MachineTreeNode>("nodes");
-
+            List<MachineTreeNode> nodesList = GetDatabaseCollectionAsList<MachineTreeNode>("nodes");
+            
             await SAP.Open();
 
             MoveAndResizeSapWindow();
@@ -792,12 +792,13 @@ namespace InvaSAP
                     // Hae laitteen nimi tietokannasta käyttäen laiteID:tä
                     if (machineId != "")
                     {
-                        MachineTreeNode node = nodes.FindOne(x => x.id == machineId);
+                        MachineTreeNode? node = nodesList.FirstOrDefault(x => x.id == machineId);
                         if (node != null && node.name != null)
                             machineDesc = node.name;
                         else
                             machineDesc = "[Tunnistamaton laite]";
                     }
+
                     DatabaseInsertNewWorkOrder(workOrderNumber, workOrderText, machineId, machineDesc);
                 }
 
@@ -807,7 +808,7 @@ namespace InvaSAP
             }
             catch (Exception ex)
             {
-                Debug.WriteLine("OpenWorkOrdersRefresh - Exception: " + ex.Message);
+                Debug.WriteLine("FetchOpenWorkOrders - Exception: " + ex.Message);
             }
 
             this.BringToFront();
@@ -906,19 +907,53 @@ namespace InvaSAP
         #endregion
 
         #region Database interactions
-        private static void DatabaseInsertNewWorkOrder(string workOrderId, string workOrderDesc, string machineId, string machineDesc)
+        public static List<T> GetDatabaseCollectionAsList<T>(string collectionName)
         {
             using var db = new LiteDatabase(Properties.Settings.Default.Tietokantapolku);
-            var workOrders = db.GetCollection<OpenWorkOrder>("openworkorders");
-
-            OpenWorkOrder wo = new()
+            var collection = db.GetCollection<T>(collectionName);
+            var list = new List<T>();
+            foreach (var i in collection.FindAll())
             {
-                id = workOrderId,
-                kuvaus = workOrderDesc,
-                laite = machineId,
-                laiteKuvaus = machineDesc
-            };
-            workOrders.Insert(wo);
+                list.Add(i);
+            }
+            return (list);
+        }
+
+        private static void DatabaseInsertNewWorkOrder(string workOrderId, string workOrderDesc, string machineId, string machineDesc)
+        {
+            try
+            {
+                using var db = new LiteDatabase(Properties.Settings.Default.Tietokantapolku);
+                var workOrders = db.GetCollection<OpenWorkOrder>("openworkorders");
+
+                OpenWorkOrder wo = new()
+                {
+                    id = workOrderId,
+                    kuvaus = workOrderDesc,
+                    laite = machineId,
+                    laiteKuvaus = machineDesc
+                };
+                workOrders.Insert(wo);
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine("DatabaseInsertNewWorkOrder - Exception: " + ex.Message);
+            }
+        }
+        // Täytä käyttäjät tietokantaan
+        private void FillUserList()
+        {
+            using var db = new LiteDatabase(Properties.Settings.Default.Tietokantapolku);
+            var users = db.GetCollection<User>("users");
+            if (users.Count() == 0)
+            {
+                ResetUsers(Kayttajat);
+            }
+            else
+            {
+                dgUsers.DataSource = users.FindAll().OrderBy(x => x.name).ToList(); // Päivitä Asetukset-tabin käyttäjälista.
+            }
+
         }
         private void ResetUsers(List<User> usersToAdd)
         {
@@ -927,8 +962,7 @@ namespace InvaSAP
             users.DeleteAll();
             users.InsertBulk(usersToAdd);
 
-            dgUsers.DataSource = db.GetCollection<User>("users").FindAll().ToList();
-            dgUsers.Refresh();
+            dgUsers.DataSource = users.FindAll().OrderBy(x => x.name).ToList();
         }
         #endregion
 
@@ -1000,7 +1034,6 @@ namespace InvaSAP
         // Täytä käyttäjäpudotusvalikot
         private void UpdateUserComboBox()
         {
-
             using var db = new LiteDatabase(Properties.Settings.Default.Tietokantapolku);
 
             var users = db.GetCollection<User>("users")
@@ -1015,6 +1048,8 @@ namespace InvaSAP
 
             if (Properties.Settings.Default.ViimeisinKayttaja > 0)
                 cbHenkilo.SelectedValue = Properties.Settings.Default.ViimeisinKayttaja;
+
+            //db.Dispose();
         }
         private void UpdateOpenWorkOrderList()
         {
@@ -1022,6 +1057,8 @@ namespace InvaSAP
             var workOrders = db.GetCollection<OpenWorkOrder>("openworkorders");
 
             dgOpenWorkOrders.DataSource = workOrders.FindAll().OrderByDescending(x => x.id).ToList();
+
+            //db.Dispose();
         }
         private void OpenConfirmWorkOrderTab(string OrderId)
         {
@@ -1030,6 +1067,8 @@ namespace InvaSAP
             OpenWorkOrder workorder = workOrders.FindOne(x => x.id == OrderId);
             PrefillOpenWorkOrder(workorder);
             tabControlMain.SelectedTab = tabKirjaaTunteja;
+
+            //db.Dispose();
         }
         // Avaa tuntien kirjauslomake avoimien töiden sivulta
         private void FillTimeComboboxes()
@@ -1170,6 +1209,8 @@ namespace InvaSAP
                 user.show = show;
                 db.GetCollection<User>("users").Update(user);
             }
+
+            //db.Dispose();
         }
 
         #endregion
@@ -1309,6 +1350,7 @@ namespace InvaSAP
         {
             using var db = new LiteDatabase(Properties.Settings.Default.Tietokantapolku);
             var nodes = db.GetCollection<MachineTreeNode>("nodes").FindAll().ToList();
+            //db.Dispose();
 
             treeLaitepuu.BeginUpdate();
             treeLaitepuu.Nodes.Clear();
