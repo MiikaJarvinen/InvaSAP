@@ -13,7 +13,7 @@ namespace InvaSAP
     {
         #region Operating System
         // Windowsin ikkunoiden hallintaan liittyvää.
-        [DllImport("user32.dll")]
+        [DllImport("user32.dll", CharSet = CharSet.Unicode)]
         private static extern IntPtr FindWindow(string lpClassName, string lpWindowName);
         [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
         private static extern IntPtr FindWindowEx(IntPtr hwndParent, IntPtr hwndChildAfter, string lpszClass, string lpszWindow);
@@ -848,19 +848,23 @@ namespace InvaSAP
             SAP.SetTextBox("AFRUD-IEDZ", cbLopetusaika.Text); // Lopetusaika
             SAP.SetTextField("AFRUD-LTXA1", tbVahvistusteksti.Text); // Vahvistusteksti
 
-            SAP.PressButton("/tbar[1]/btn[8]"); // Varaosien poisto
-            for (int i = 0; i < dgVaraosienPoisto.Rows.Count - 1; i++)
+            // Skippaa jos varaosalista on tyhjä
+            if (dgVaraosienPoisto.Rows.Count > 1)
             {
-                DataGridViewRow row = dgVaraosienPoisto.Rows[i];
-                DataGridViewCell id = row.Cells[0];
-                DataGridViewCell count = row.Cells[1];
-                DataGridViewCell unit = row.Cells[2];
+                SAP.PressButton("/tbar[1]/btn[8]"); // Varaosien poisto
+                for (int i = 0; i < dgVaraosienPoisto.Rows.Count - 1; i++)
+                {
+                    DataGridViewRow row = dgVaraosienPoisto.Rows[i];
+                    DataGridViewCell id = row.Cells[0];
+                    DataGridViewCell count = row.Cells[1];
+                    DataGridViewCell unit = row.Cells[2];
 
-                SAP.SetTextBox($"/usr/subTABLE:SAPLCOWB:0510/tblSAPLCOWBTCTRL_0510/ctxtCOWB_COMP-MATNR[0,{i}]", id.Value.ToString()); // Nimike
-                SAP.SendVKey(0);
-                SAP.SetTextField($"/usr/subTABLE:SAPLCOWB:0510/tblSAPLCOWBTCTRL_0510/txtCOWB_COMP-ERFMG[2,{i}]", count.Value.ToString()); // Määrä
-                SAP.SetTextBox($"/usr/subTABLE:SAPLCOWB:0510/tblSAPLCOWBTCTRL_0510/ctxtCOWB_COMP-ERFME[3,{i}]", unit.Value.ToString()); // Yksikkö
-                SAP.SetTextBox($"/usr/subTABLE:SAPLCOWB:0510/tblSAPLCOWBTCTRL_0510/ctxtCOWB_COMP-LGORT[5,{i}]", "070"); // Varasto
+                    SAP.SetTextBox($"/usr/subTABLE:SAPLCOWB:0510/tblSAPLCOWBTCTRL_0510/ctxtCOWB_COMP-MATNR[0,{i}]", id.Value.ToString()); // Nimike
+                    SAP.SendVKey(0);
+                    SAP.SetTextField($"/usr/subTABLE:SAPLCOWB:0510/tblSAPLCOWBTCTRL_0510/txtCOWB_COMP-ERFMG[2,{i}]", count.Value.ToString()); // Määrä
+                    SAP.SetTextBox($"/usr/subTABLE:SAPLCOWB:0510/tblSAPLCOWBTCTRL_0510/ctxtCOWB_COMP-ERFME[3,{i}]", unit.Value.ToString()); // Yksikkö
+                    SAP.SetTextBox($"/usr/subTABLE:SAPLCOWB:0510/tblSAPLCOWBTCTRL_0510/ctxtCOWB_COMP-LGORT[5,{i}]", "070"); // Varasto
+                }
             }
 
             SAP.PressButton("btn[11]"); // Tallenna
@@ -1146,6 +1150,16 @@ namespace InvaSAP
         }
         #endregion
 
+        #region CellContentClick
+        private void dgKirjaaPaiva_CellContentClick(object sender, DataGridViewCellEventArgs e)
+        {
+            if (e.ColumnIndex == dgKirjaaPaiva.Columns["Poista"].Index && dgKirjaaPaiva.RowCount > 1)
+            {
+                dgKirjaaPaiva.Rows.RemoveAt(e.RowIndex);
+            }
+        }
+        #endregion
+
         #region CellDoubleClick
         private void DataGridViewOpenWorkOrders_CellDoubleClick(object sender, DataGridViewCellEventArgs e)
         {
@@ -1160,6 +1174,22 @@ namespace InvaSAP
         #endregion
 
         #region CellValueChanged
+        private void dgVaraosienPoisto_CellValueChanged(object sender, DataGridViewCellEventArgs e)
+        {
+            // Poista rivi, jos nimikenumerosolu tyhjennetään
+            if (e.RowIndex >= 0 && dgVaraosienPoisto.Columns[e.ColumnIndex].Name == "Nimike")
+            {
+                DataGridViewRow row = dgVaraosienPoisto.Rows[e.RowIndex];
+                DataGridViewCell nimikeCell = row.Cells["Nimike"];
+
+                if (nimikeCell.Value == null || string.IsNullOrEmpty(nimikeCell.Value.ToString()))
+                {
+                    dgVaraosienPoisto.Rows.RemoveAt(e.RowIndex);
+                }
+            }
+        }
+
+
         // Päivitä tietokantaan, kun Asetukset-tabin käyttäjälistalla vaihdetaan näkyvyysarvoa.
         private void dgUsers_CellValueChanged(object sender, DataGridViewCellEventArgs e)
         {
@@ -1191,20 +1221,20 @@ namespace InvaSAP
         #region RowsAdded
         private void dgVaraosienPoisto_RowsAdded(object sender, DataGridViewRowsAddedEventArgs e)
         {
-            DataGridView dataGridView = (DataGridView)sender;
-
-            DataGridViewRow newRow = dataGridView.Rows[e.RowIndex - 1];
-            newRow.Cells["count"].Value = 1;
-            newRow.Cells["unit"].Value = "KPL";
+            if (dgVaraosienPoisto.Rows.Count > 1)
+            {
+                DataGridViewRow newRow = dgVaraosienPoisto.Rows[e.RowIndex - 1];
+                newRow.Cells["count"].Value = 1;
+                newRow.Cells["unit"].Value = "KPL";
+            }
         }
         private void dgKirjaaPaiva_RowsAdded(object sender, DataGridViewRowsAddedEventArgs e)
         {
-            DataGridView dataGridView = (DataGridView)sender;
-            DataGridViewRow newRow = dataGridView.Rows[e.RowIndex - 1];
+            DataGridViewRow newRow = dgKirjaaPaiva.Rows[e.RowIndex - 1];
             newRow.Cells["Tunnit"].Value = 1;
-            if (dataGridView.Rows.Count > 2)
+            if (dgKirjaaPaiva.Rows.Count > 2)
             {
-                DataGridViewRow prevRow = dataGridView.Rows[e.RowIndex - 2];
+                DataGridViewRow prevRow = dgKirjaaPaiva.Rows[e.RowIndex - 2];
                 newRow.Cells["Toimintolaji"].Value = prevRow.Cells["Toimintolaji"].Value;
             }
         }
@@ -1313,7 +1343,6 @@ namespace InvaSAP
             UpdateMachineTreeview(nodes, cbLaitehaku.Text);
             treeLaitepuu.EndUpdate();
         }
-
         private void tbDefaultValuesToimintopaikkarajaus_TextChanged(object sender, EventArgs e)
         {
             string txt = tbDefaultValuesToimintopaikkarajaus.Text.Trim();
@@ -1321,8 +1350,6 @@ namespace InvaSAP
             Properties.Settings.Default.Save();
             tbOpenWorkOrdersFunctionalLocation.Text = txt;
         }
-
-
         #endregion
 
     }

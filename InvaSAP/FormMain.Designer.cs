@@ -88,15 +88,13 @@
             cbKirjaaTuntejaToimintolaji = new ComboBox();
             groupBox5 = new GroupBox();
             dgVaraosienPoisto = new DataGridView();
-            dataGridViewTextBoxColumn1 = new DataGridViewTextBoxColumn();
-            count = new DataGridViewTextBoxColumn();
-            unit = new DataGridViewComboBoxColumn();
             tabKirjaaPaiva = new TabPage();
             splitContainerKirjaaPaiva = new SplitContainer();
             btnKirjaaPaiva = new Button();
             cbKirjaaPaivaHenkilo = new ComboBox();
             label32 = new Label();
             dgKirjaaPaiva = new DataGridView();
+            Poista = new DataGridViewButtonColumn();
             dataGridViewTextBoxColumn2 = new DataGridViewTextBoxColumn();
             Tunnit = new DataGridViewTextBoxColumn();
             Vahvistusteksti = new DataGridViewTextBoxColumn();
@@ -140,6 +138,8 @@
             tbSapKirjautuminenKayttaja = new TextBox();
             splitContainerAsetuksetInnerRight = new SplitContainer();
             groupBox4 = new GroupBox();
+            splitContainerUserList = new SplitContainer();
+            btnResetUsers = new Button();
             dgUsers = new DataGridView();
             id = new DataGridViewTextBoxColumn();
             name = new DataGridViewTextBoxColumn();
@@ -151,8 +151,9 @@
             tbAsetuksetToimipaikka = new TextBox();
             tbLog = new TextBox();
             btnHaeLaitepuu = new Button();
-            btnResetUsers = new Button();
-            splitContainerUserList = new SplitContainer();
+            Nimike = new DataGridViewTextBoxColumn();
+            count = new DataGridViewTextBoxColumn();
+            unit = new DataGridViewComboBoxColumn();
             tabControlMain.SuspendLayout();
             tabLuoTyotilaus.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)splitContainerLuoTyotilaus).BeginInit();
@@ -196,12 +197,12 @@
             splitContainerAsetuksetInnerRight.Panel2.SuspendLayout();
             splitContainerAsetuksetInnerRight.SuspendLayout();
             groupBox4.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)dgUsers).BeginInit();
-            groupBox2.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)splitContainerUserList).BeginInit();
             splitContainerUserList.Panel1.SuspendLayout();
             splitContainerUserList.Panel2.SuspendLayout();
             splitContainerUserList.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)dgUsers).BeginInit();
+            groupBox2.SuspendLayout();
             SuspendLayout();
             // 
             // tabControlMain
@@ -815,7 +816,7 @@
             // 
             dgVaraosienPoisto.BackgroundColor = SystemColors.Window;
             dgVaraosienPoisto.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            dgVaraosienPoisto.Columns.AddRange(new DataGridViewColumn[] { dataGridViewTextBoxColumn1, count, unit });
+            dgVaraosienPoisto.Columns.AddRange(new DataGridViewColumn[] { Nimike, count, unit });
             dgVaraosienPoisto.Dock = DockStyle.Fill;
             dgVaraosienPoisto.Location = new Point(3, 19);
             dgVaraosienPoisto.Name = "dgVaraosienPoisto";
@@ -823,33 +824,8 @@
             dgVaraosienPoisto.RowTemplate.Height = 25;
             dgVaraosienPoisto.Size = new Size(470, 611);
             dgVaraosienPoisto.TabIndex = 0;
+            dgVaraosienPoisto.CellValueChanged += dgVaraosienPoisto_CellValueChanged;
             dgVaraosienPoisto.RowsAdded += dgVaraosienPoisto_RowsAdded;
-            // 
-            // dataGridViewTextBoxColumn1
-            // 
-            dataGridViewTextBoxColumn1.AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
-            dataGridViewTextBoxColumn1.DataPropertyName = "id";
-            dataGridViewTextBoxColumn1.HeaderText = "Nimike";
-            dataGridViewTextBoxColumn1.Name = "dataGridViewTextBoxColumn1";
-            // 
-            // count
-            // 
-            count.AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells;
-            count.DataPropertyName = "count";
-            count.HeaderText = "Määrä";
-            count.Name = "count";
-            count.Width = 65;
-            // 
-            // unit
-            // 
-            unit.AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells;
-            unit.DataPropertyName = "unit";
-            unit.HeaderText = "Yksikkö";
-            unit.Items.AddRange(new object[] { "KPL", "M" });
-            unit.Name = "unit";
-            unit.Resizable = DataGridViewTriState.True;
-            unit.SortMode = DataGridViewColumnSortMode.Automatic;
-            unit.Width = 72;
             // 
             // tabKirjaaPaiva
             // 
@@ -914,17 +890,27 @@
             // 
             dgKirjaaPaiva.BackgroundColor = SystemColors.Window;
             dgKirjaaPaiva.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            dgKirjaaPaiva.Columns.AddRange(new DataGridViewColumn[] { dataGridViewTextBoxColumn2, Tunnit, Vahvistusteksti, Loppuvahvistus, Toimintolaji });
+            dgKirjaaPaiva.Columns.AddRange(new DataGridViewColumn[] { Poista, dataGridViewTextBoxColumn2, Tunnit, Vahvistusteksti, Loppuvahvistus, Toimintolaji });
             dgKirjaaPaiva.Dock = DockStyle.Fill;
             dgKirjaaPaiva.GridColor = SystemColors.ButtonShadow;
             dgKirjaaPaiva.Location = new Point(0, 0);
             dgKirjaaPaiva.Name = "dgKirjaaPaiva";
             dgKirjaaPaiva.RowHeadersBorderStyle = DataGridViewHeaderBorderStyle.Single;
+            dgKirjaaPaiva.RowHeadersVisible = false;
             dgKirjaaPaiva.RowTemplate.Height = 25;
             dgKirjaaPaiva.SelectionMode = DataGridViewSelectionMode.CellSelect;
             dgKirjaaPaiva.Size = new Size(970, 551);
             dgKirjaaPaiva.TabIndex = 26;
+            dgKirjaaPaiva.CellContentClick += dgKirjaaPaiva_CellContentClick;
             dgKirjaaPaiva.RowsAdded += dgKirjaaPaiva_RowsAdded;
+            // 
+            // Poista
+            // 
+            Poista.HeaderText = "Poista rivi";
+            Poista.Name = "Poista";
+            Poista.Text = "Poista";
+            Poista.UseColumnTextForButtonValue = true;
+            Poista.Width = 70;
             // 
             // dataGridViewTextBoxColumn2
             // 
@@ -1378,6 +1364,35 @@
             groupBox4.TabStop = false;
             groupBox4.Text = "Näytettävän käyttäjälistan muokkaus";
             // 
+            // splitContainerUserList
+            // 
+            splitContainerUserList.Dock = DockStyle.Fill;
+            splitContainerUserList.Location = new Point(3, 19);
+            splitContainerUserList.Name = "splitContainerUserList";
+            splitContainerUserList.Orientation = Orientation.Horizontal;
+            // 
+            // splitContainerUserList.Panel1
+            // 
+            splitContainerUserList.Panel1.Controls.Add(btnResetUsers);
+            // 
+            // splitContainerUserList.Panel2
+            // 
+            splitContainerUserList.Panel2.Controls.Add(dgUsers);
+            splitContainerUserList.Size = new Size(327, 605);
+            splitContainerUserList.SplitterDistance = 41;
+            splitContainerUserList.TabIndex = 16;
+            // 
+            // btnResetUsers
+            // 
+            btnResetUsers.Dock = DockStyle.Fill;
+            btnResetUsers.Location = new Point(0, 0);
+            btnResetUsers.Name = "btnResetUsers";
+            btnResetUsers.Size = new Size(327, 41);
+            btnResetUsers.TabIndex = 16;
+            btnResetUsers.Text = "Resetoi käyttäjälistaus";
+            btnResetUsers.UseVisualStyleBackColor = true;
+            btnResetUsers.Click += btnResetUsers_Click;
+            // 
             // dgUsers
             // 
             dgUsers.AllowUserToAddRows = false;
@@ -1489,34 +1504,31 @@
             btnHaeLaitepuu.UseVisualStyleBackColor = true;
             btnHaeLaitepuu.Click += btnHaeLaitepuu_Click;
             // 
-            // btnResetUsers
+            // Nimike
             // 
-            btnResetUsers.Dock = DockStyle.Fill;
-            btnResetUsers.Location = new Point(0, 0);
-            btnResetUsers.Name = "btnResetUsers";
-            btnResetUsers.Size = new Size(327, 41);
-            btnResetUsers.TabIndex = 16;
-            btnResetUsers.Text = "Resetoi käyttäjälistaus";
-            btnResetUsers.UseVisualStyleBackColor = true;
-            btnResetUsers.Click += btnResetUsers_Click;
+            Nimike.AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
+            Nimike.DataPropertyName = "id";
+            Nimike.HeaderText = "Nimike";
+            Nimike.Name = "Nimike";
             // 
-            // splitContainerUserList
+            // count
             // 
-            splitContainerUserList.Dock = DockStyle.Fill;
-            splitContainerUserList.Location = new Point(3, 19);
-            splitContainerUserList.Name = "splitContainerUserList";
-            splitContainerUserList.Orientation = Orientation.Horizontal;
+            count.AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells;
+            count.DataPropertyName = "count";
+            count.HeaderText = "Määrä";
+            count.Name = "count";
+            count.Width = 65;
             // 
-            // splitContainerUserList.Panel1
+            // unit
             // 
-            splitContainerUserList.Panel1.Controls.Add(btnResetUsers);
-            // 
-            // splitContainerUserList.Panel2
-            // 
-            splitContainerUserList.Panel2.Controls.Add(dgUsers);
-            splitContainerUserList.Size = new Size(327, 605);
-            splitContainerUserList.SplitterDistance = 41;
-            splitContainerUserList.TabIndex = 16;
+            unit.AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells;
+            unit.DataPropertyName = "unit";
+            unit.HeaderText = "Yksikkö";
+            unit.Items.AddRange(new object[] { "KPL", "M" });
+            unit.Name = "unit";
+            unit.Resizable = DataGridViewTriState.True;
+            unit.SortMode = DataGridViewColumnSortMode.Automatic;
+            unit.Width = 72;
             // 
             // FormMain
             // 
@@ -1580,13 +1592,13 @@
             ((System.ComponentModel.ISupportInitialize)splitContainerAsetuksetInnerRight).EndInit();
             splitContainerAsetuksetInnerRight.ResumeLayout(false);
             groupBox4.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)dgUsers).EndInit();
-            groupBox2.ResumeLayout(false);
-            groupBox2.PerformLayout();
             splitContainerUserList.Panel1.ResumeLayout(false);
             splitContainerUserList.Panel2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)splitContainerUserList).EndInit();
             splitContainerUserList.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)dgUsers).EndInit();
+            groupBox2.ResumeLayout(false);
+            groupBox2.PerformLayout();
             ResumeLayout(false);
         }
 
@@ -1688,9 +1700,6 @@
         private GroupBox groupBox4;
         private GroupBox groupBox5;
         private DataGridView dgVaraosienPoisto;
-        private DataGridViewTextBoxColumn dataGridViewTextBoxColumn1;
-        private DataGridViewTextBoxColumn count;
-        private DataGridViewComboBoxColumn unit;
         private Label label30;
         private TextBox tbAsetuksetVariantti;
         private Label label31;
@@ -1708,13 +1717,17 @@
         private Button btnKirjaaTunnitNoClear;
         private Button btnAvoimetTyotTulosta;
         private Button btnLuoTyoJaVahvista;
+        private Label label33;
+        private TextBox tbLaitehakuVariantti;
+        private SplitContainer splitContainerUserList;
+        private DataGridViewButtonColumn Poista;
         private DataGridViewTextBoxColumn dataGridViewTextBoxColumn2;
         private DataGridViewTextBoxColumn Tunnit;
         private DataGridViewTextBoxColumn Vahvistusteksti;
         private DataGridViewCheckBoxColumn Loppuvahvistus;
         private DataGridViewComboBoxColumn Toimintolaji;
-        private Label label33;
-        private TextBox tbLaitehakuVariantti;
-        private SplitContainer splitContainerUserList;
+        private DataGridViewTextBoxColumn Nimike;
+        private DataGridViewTextBoxColumn count;
+        private DataGridViewComboBoxColumn unit;
     }
 }
