@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(FormMain));
             tabControlMain = new TabControl();
             tabLuoTyotilaus = new TabPage();
@@ -88,18 +89,17 @@
             cbKirjaaTuntejaToimintolaji = new ComboBox();
             groupBox5 = new GroupBox();
             dgVaraosienPoisto = new DataGridView();
+            dgVaraosienPoistoNimike = new DataGridViewTextBoxColumn();
+            count = new DataGridViewTextBoxColumn();
+            unit = new DataGridViewComboBoxColumn();
+            contextMenuStripDeleteRow = new ContextMenuStrip(components);
+            toolStripMenuItemDeleteRow = new ToolStripMenuItem();
             tabKirjaaPaiva = new TabPage();
             splitContainerKirjaaPaiva = new SplitContainer();
             btnKirjaaPaiva = new Button();
             cbKirjaaPaivaHenkilo = new ComboBox();
             label32 = new Label();
             dgKirjaaPaiva = new DataGridView();
-            Poista = new DataGridViewButtonColumn();
-            dataGridViewTextBoxColumn2 = new DataGridViewTextBoxColumn();
-            Tunnit = new DataGridViewTextBoxColumn();
-            Vahvistusteksti = new DataGridViewTextBoxColumn();
-            Loppuvahvistus = new DataGridViewCheckBoxColumn();
-            Toimintolaji = new DataGridViewComboBoxColumn();
             tabAvoimetTyot = new TabPage();
             splitContainerAvoimetTyot = new SplitContainer();
             dgOpenWorkOrders = new DataGridView();
@@ -151,9 +151,11 @@
             tbAsetuksetToimipaikka = new TextBox();
             tbLog = new TextBox();
             btnHaeLaitepuu = new Button();
-            Nimike = new DataGridViewTextBoxColumn();
-            count = new DataGridViewTextBoxColumn();
-            unit = new DataGridViewComboBoxColumn();
+            dgKirjaaPaivaTyonumero = new DataGridViewTextBoxColumn();
+            Tunnit = new DataGridViewTextBoxColumn();
+            Vahvistusteksti = new DataGridViewTextBoxColumn();
+            Loppuvahvistus = new DataGridViewCheckBoxColumn();
+            Toimintolaji = new DataGridViewComboBoxColumn();
             tabControlMain.SuspendLayout();
             tabLuoTyotilaus.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)splitContainerLuoTyotilaus).BeginInit();
@@ -171,6 +173,7 @@
             splitContainerKirjaaTunteja.SuspendLayout();
             groupBox5.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)dgVaraosienPoisto).BeginInit();
+            contextMenuStripDeleteRow.SuspendLayout();
             tabKirjaaPaiva.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)splitContainerKirjaaPaiva).BeginInit();
             splitContainerKirjaaPaiva.Panel1.SuspendLayout();
@@ -814,9 +817,12 @@
             // 
             // dgVaraosienPoisto
             // 
+            dgVaraosienPoisto.AllowUserToResizeColumns = false;
+            dgVaraosienPoisto.AllowUserToResizeRows = false;
             dgVaraosienPoisto.BackgroundColor = SystemColors.Window;
             dgVaraosienPoisto.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            dgVaraosienPoisto.Columns.AddRange(new DataGridViewColumn[] { Nimike, count, unit });
+            dgVaraosienPoisto.Columns.AddRange(new DataGridViewColumn[] { dgVaraosienPoistoNimike, count, unit });
+            dgVaraosienPoisto.ContextMenuStrip = contextMenuStripDeleteRow;
             dgVaraosienPoisto.Dock = DockStyle.Fill;
             dgVaraosienPoisto.Location = new Point(3, 19);
             dgVaraosienPoisto.Name = "dgVaraosienPoisto";
@@ -826,6 +832,45 @@
             dgVaraosienPoisto.TabIndex = 0;
             dgVaraosienPoisto.CellValueChanged += dgVaraosienPoisto_CellValueChanged;
             dgVaraosienPoisto.RowsAdded += dgVaraosienPoisto_RowsAdded;
+            // 
+            // dgVaraosienPoistoNimike
+            // 
+            dgVaraosienPoistoNimike.AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
+            dgVaraosienPoistoNimike.DataPropertyName = "id";
+            dgVaraosienPoistoNimike.HeaderText = "Nimike";
+            dgVaraosienPoistoNimike.Name = "dgVaraosienPoistoNimike";
+            // 
+            // count
+            // 
+            count.AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells;
+            count.DataPropertyName = "count";
+            count.HeaderText = "Määrä";
+            count.Name = "count";
+            count.Width = 65;
+            // 
+            // unit
+            // 
+            unit.AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells;
+            unit.DataPropertyName = "unit";
+            unit.HeaderText = "Yksikkö";
+            unit.Items.AddRange(new object[] { "KPL", "M" });
+            unit.Name = "unit";
+            unit.Resizable = DataGridViewTriState.True;
+            unit.SortMode = DataGridViewColumnSortMode.Automatic;
+            unit.Width = 72;
+            // 
+            // contextMenuStripDeleteRow
+            // 
+            contextMenuStripDeleteRow.Items.AddRange(new ToolStripItem[] { toolStripMenuItemDeleteRow });
+            contextMenuStripDeleteRow.Name = "contextMenuStripDeleteRow";
+            contextMenuStripDeleteRow.Size = new Size(126, 26);
+            // 
+            // toolStripMenuItemDeleteRow
+            // 
+            toolStripMenuItemDeleteRow.Name = "toolStripMenuItemDeleteRow";
+            toolStripMenuItemDeleteRow.Size = new Size(125, 22);
+            toolStripMenuItemDeleteRow.Text = "Poista rivi";
+            toolStripMenuItemDeleteRow.Click += toolStripMenuItemDeleteRow_Click;
             // 
             // tabKirjaaPaiva
             // 
@@ -888,9 +933,12 @@
             // 
             // dgKirjaaPaiva
             // 
+            dgKirjaaPaiva.AllowUserToResizeColumns = false;
+            dgKirjaaPaiva.AllowUserToResizeRows = false;
             dgKirjaaPaiva.BackgroundColor = SystemColors.Window;
             dgKirjaaPaiva.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            dgKirjaaPaiva.Columns.AddRange(new DataGridViewColumn[] { Poista, dataGridViewTextBoxColumn2, Tunnit, Vahvistusteksti, Loppuvahvistus, Toimintolaji });
+            dgKirjaaPaiva.Columns.AddRange(new DataGridViewColumn[] { dgKirjaaPaivaTyonumero, Tunnit, Vahvistusteksti, Loppuvahvistus, Toimintolaji });
+            dgKirjaaPaiva.ContextMenuStrip = contextMenuStripDeleteRow;
             dgKirjaaPaiva.Dock = DockStyle.Fill;
             dgKirjaaPaiva.GridColor = SystemColors.ButtonShadow;
             dgKirjaaPaiva.Location = new Point(0, 0);
@@ -901,46 +949,8 @@
             dgKirjaaPaiva.SelectionMode = DataGridViewSelectionMode.CellSelect;
             dgKirjaaPaiva.Size = new Size(970, 551);
             dgKirjaaPaiva.TabIndex = 26;
-            dgKirjaaPaiva.CellContentClick += dgKirjaaPaiva_CellContentClick;
+            dgKirjaaPaiva.CellValueChanged += dgKirjaaPaiva_CellValueChanged;
             dgKirjaaPaiva.RowsAdded += dgKirjaaPaiva_RowsAdded;
-            // 
-            // Poista
-            // 
-            Poista.HeaderText = "Poista rivi";
-            Poista.Name = "Poista";
-            Poista.Text = "Poista";
-            Poista.UseColumnTextForButtonValue = true;
-            Poista.Width = 70;
-            // 
-            // dataGridViewTextBoxColumn2
-            // 
-            dataGridViewTextBoxColumn2.HeaderText = "Työnumero";
-            dataGridViewTextBoxColumn2.Name = "dataGridViewTextBoxColumn2";
-            // 
-            // Tunnit
-            // 
-            Tunnit.HeaderText = "Tuntimäärä";
-            Tunnit.MaxInputLength = 2;
-            Tunnit.Name = "Tunnit";
-            // 
-            // Vahvistusteksti
-            // 
-            Vahvistusteksti.AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
-            Vahvistusteksti.HeaderText = "Vahvistusteksti";
-            Vahvistusteksti.MaxInputLength = 40;
-            Vahvistusteksti.Name = "Vahvistusteksti";
-            // 
-            // Loppuvahvistus
-            // 
-            Loppuvahvistus.HeaderText = "Loppuvahvistus";
-            Loppuvahvistus.Name = "Loppuvahvistus";
-            // 
-            // Toimintolaji
-            // 
-            Toimintolaji.HeaderText = "Toimintolaji";
-            Toimintolaji.MinimumWidth = 130;
-            Toimintolaji.Name = "Toimintolaji";
-            Toimintolaji.Width = 130;
             // 
             // tabAvoimetTyot
             // 
@@ -1504,31 +1514,35 @@
             btnHaeLaitepuu.UseVisualStyleBackColor = true;
             btnHaeLaitepuu.Click += btnHaeLaitepuu_Click;
             // 
-            // Nimike
+            // dgKirjaaPaivaTyonumero
             // 
-            Nimike.AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
-            Nimike.DataPropertyName = "id";
-            Nimike.HeaderText = "Nimike";
-            Nimike.Name = "Nimike";
+            dgKirjaaPaivaTyonumero.HeaderText = "Työnumero";
+            dgKirjaaPaivaTyonumero.Name = "dgKirjaaPaivaTyonumero";
             // 
-            // count
+            // Tunnit
             // 
-            count.AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells;
-            count.DataPropertyName = "count";
-            count.HeaderText = "Määrä";
-            count.Name = "count";
-            count.Width = 65;
+            Tunnit.HeaderText = "Tuntimäärä";
+            Tunnit.MaxInputLength = 2;
+            Tunnit.Name = "Tunnit";
             // 
-            // unit
+            // Vahvistusteksti
             // 
-            unit.AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCells;
-            unit.DataPropertyName = "unit";
-            unit.HeaderText = "Yksikkö";
-            unit.Items.AddRange(new object[] { "KPL", "M" });
-            unit.Name = "unit";
-            unit.Resizable = DataGridViewTriState.True;
-            unit.SortMode = DataGridViewColumnSortMode.Automatic;
-            unit.Width = 72;
+            Vahvistusteksti.AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
+            Vahvistusteksti.HeaderText = "Vahvistusteksti";
+            Vahvistusteksti.MaxInputLength = 40;
+            Vahvistusteksti.Name = "Vahvistusteksti";
+            // 
+            // Loppuvahvistus
+            // 
+            Loppuvahvistus.HeaderText = "Loppuvahvistus";
+            Loppuvahvistus.Name = "Loppuvahvistus";
+            // 
+            // Toimintolaji
+            // 
+            Toimintolaji.HeaderText = "Toimintolaji";
+            Toimintolaji.MinimumWidth = 130;
+            Toimintolaji.Name = "Toimintolaji";
+            Toimintolaji.Width = 130;
             // 
             // FormMain
             // 
@@ -1561,6 +1575,7 @@
             splitContainerKirjaaTunteja.ResumeLayout(false);
             groupBox5.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)dgVaraosienPoisto).EndInit();
+            contextMenuStripDeleteRow.ResumeLayout(false);
             tabKirjaaPaiva.ResumeLayout(false);
             splitContainerKirjaaPaiva.Panel1.ResumeLayout(false);
             splitContainerKirjaaPaiva.Panel1.PerformLayout();
@@ -1720,14 +1735,15 @@
         private Label label33;
         private TextBox tbLaitehakuVariantti;
         private SplitContainer splitContainerUserList;
-        private DataGridViewButtonColumn Poista;
-        private DataGridViewTextBoxColumn dataGridViewTextBoxColumn2;
+        private DataGridViewTextBoxColumn dgVaraosienPoistoNimike;
+        private DataGridViewTextBoxColumn count;
+        private DataGridViewComboBoxColumn unit;
+        private ContextMenuStrip contextMenuStripDeleteRow;
+        private ToolStripMenuItem toolStripMenuItemDeleteRow;
+        private DataGridViewTextBoxColumn dgKirjaaPaivaTyonumero;
         private DataGridViewTextBoxColumn Tunnit;
         private DataGridViewTextBoxColumn Vahvistusteksti;
         private DataGridViewCheckBoxColumn Loppuvahvistus;
         private DataGridViewComboBoxColumn Toimintolaji;
-        private DataGridViewTextBoxColumn Nimike;
-        private DataGridViewTextBoxColumn count;
-        private DataGridViewComboBoxColumn unit;
     }
 }

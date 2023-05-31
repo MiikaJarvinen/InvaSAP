@@ -419,7 +419,6 @@ namespace InvaSAP
                 treeLaitepuu.ExpandAll();
             }
         }
-
         // Rekursiivinen funktio, jolla lisätään laitepuun solmuihin alisolmut.
         private void UpdateChildNodes(TreeNode parentNode, MachineTreeNode parentData, List<MachineTreeNode> nodes)
         {
@@ -907,7 +906,6 @@ namespace InvaSAP
             var collection = DB.GetCollection<T>(collectionName);
             return collection.FindAll().ToList();
         }
-
         private static void DatabaseInsertNewWorkOrder(string workOrderId, string workOrderDesc, string machineId, string machineDesc)
         {
             var workOrders = DB.GetCollection<OpenWorkOrder>("openworkorders");
@@ -921,9 +919,9 @@ namespace InvaSAP
             };
             workOrders.Insert(wo);
         }
-        // Täytä käyttäjät tietokantaan
         private void FillUserList()
         {
+            // Täytä käyttäjät tietokantaan
             var users = DB.GetCollection<User>("users");
             if (users.Count() == 0)
             {
@@ -944,9 +942,9 @@ namespace InvaSAP
         }
         #endregion
 
-        // Lue SAPin statusbar/tilarivin ilmoitus ja ilmoita käyttäjälle. Tärkeä tieto, jos SAPissa tapahtuu virhe, kuten esim tunteja syöttäessä antaa jo kirjatun kellonajan.
         private static bool ReadSapStatus()
         {
+            // Lue SAPin statusbar/tilarivin ilmoitus ja ilmoita käyttäjälle. Tärkeä tieto, jos SAPissa tapahtuu virhe, kuten esim tunteja syöttäessä antaa jo kirjatun kellonajan.
             bool success = false;
 
             string[] status = SAP.GetStatusBarInfo();
@@ -977,7 +975,6 @@ namespace InvaSAP
         }
 
         #region GUI
-        // Resetoi Luo ilmoitus-lomake
         private void ClearFormCreateWorkOrder()
         {
             cbLaitehaku.Text = "";
@@ -1009,9 +1006,9 @@ namespace InvaSAP
             tbLaite.Text = Order.laite;
             tbLaiteKuvaus.Text = Order.laiteKuvaus;
         }
-        // Täytä käyttäjäpudotusvalikot
         private void UpdateUserComboBox()
         {
+            // Täytä käyttäjäpudotusvalikot
             var users = DB.GetCollection<User>("users")
                 .Find(x => x.show == true)
                 .Select(x => new UserItem { DisplayText = $"{x.name}", Value = (x.id ?? 0) })
@@ -1032,12 +1029,12 @@ namespace InvaSAP
         }
         private void OpenConfirmWorkOrderTab(string OrderId)
         {
+            // Avaa tuntien kirjauslomake avoimien töiden sivulta
             var workOrders = DB.GetCollection<OpenWorkOrder>("openworkorders");
             OpenWorkOrder workorder = workOrders.FindOne(x => x.id == OrderId);
             PrefillOpenWorkOrder(workorder);
             tabControlMain.SelectedTab = tabKirjaaTunteja;
         }
-        // Avaa tuntien kirjauslomake avoimien töiden sivulta
         private void FillTimeComboboxes()
         {
             List<int> hoursAloitus = new();
@@ -1094,7 +1091,6 @@ namespace InvaSAP
         {
             CreateWorkOrder(true);
         }
-
         private void btnHaeLaitepuu_Click(object sender, EventArgs e)
         {
             DialogResult dr = MessageBox.Show("Tämä toiminto vaatii SAP-oikeudet transaktioneihin IH01, IH06 ja IH08. \n\nOletko varma, että haluat jatkaa?", "Varmistus", MessageBoxButtons.YesNo);
@@ -1109,7 +1105,6 @@ namespace InvaSAP
             }
 
         }
-
         private void btnAvoimetTyotTulosta_Click(object sender, EventArgs e)
         {
             // TODO: tulosta työtilauspaperi listan valitusta työstä
@@ -1150,16 +1145,6 @@ namespace InvaSAP
         }
         #endregion
 
-        #region CellContentClick
-        private void dgKirjaaPaiva_CellContentClick(object sender, DataGridViewCellEventArgs e)
-        {
-            if (e.ColumnIndex == dgKirjaaPaiva.Columns["Poista"].Index && dgKirjaaPaiva.RowCount > 1)
-            {
-                dgKirjaaPaiva.Rows.RemoveAt(e.RowIndex);
-            }
-        }
-        #endregion
-
         #region CellDoubleClick
         private void DataGridViewOpenWorkOrders_CellDoubleClick(object sender, DataGridViewCellEventArgs e)
         {
@@ -1174,25 +1159,29 @@ namespace InvaSAP
         #endregion
 
         #region CellValueChanged
-        private void dgVaraosienPoisto_CellValueChanged(object sender, DataGridViewCellEventArgs e)
+        private static void DeleteRowFromDataGridByEmptyingCell(object sender, DataGridViewCellEventArgs e, string cellName)
         {
-            // Poista rivi, jos nimikenumerosolu tyhjennetään
-            if (e.RowIndex >= 0 && dgVaraosienPoisto.Columns[e.ColumnIndex].Name == "Nimike")
-            {
-                DataGridViewRow row = dgVaraosienPoisto.Rows[e.RowIndex];
-                DataGridViewCell nimikeCell = row.Cells["Nimike"];
+            // Poista rivi, jos solu tyhjennetään
 
-                if (nimikeCell.Value == null || string.IsNullOrEmpty(nimikeCell.Value.ToString()))
-                {
-                    dgVaraosienPoisto.Rows.RemoveAt(e.RowIndex);
-                }
+            if (sender is not DataGridView dataGridView)
+                return;
+
+            if (e.RowIndex >= 0 && dataGridView.Columns[e.ColumnIndex].Name == cellName)
+            {
+                DataGridViewRow row = dataGridView.Rows[e.RowIndex];
+                DataGridViewCell cell = row.Cells[cellName];
+
+                if (cell.Value == null || string.IsNullOrEmpty(cell.Value.ToString()))
+                    dataGridView.Rows.RemoveAt(e.RowIndex);
             }
         }
-
-
-        // Päivitä tietokantaan, kun Asetukset-tabin käyttäjälistalla vaihdetaan näkyvyysarvoa.
+        private void dgKirjaaPaiva_CellValueChanged(object sender, DataGridViewCellEventArgs e)
+        {
+            DeleteRowFromDataGridByEmptyingCell(sender, e, "dgKirjaaPaivaTyonumero");
+        }
         private void dgUsers_CellValueChanged(object sender, DataGridViewCellEventArgs e)
         {
+            // Päivitä tietokantaan, kun Asetukset-tabin käyttäjälistalla vaihdetaan näkyvyysarvoa.
             if (e.RowIndex >= 0 && e.ColumnIndex == dgUsers.Columns["show"].Index)
             {
                 User user = (User)dgUsers.Rows[e.RowIndex].DataBoundItem;
@@ -1201,7 +1190,10 @@ namespace InvaSAP
                 DB.GetCollection<User>("users").Update(user);
             }
         }
-
+        private void dgVaraosienPoisto_CellValueChanged(object sender, DataGridViewCellEventArgs e)
+        {
+            DeleteRowFromDataGridByEmptyingCell(sender, e, "dgVaraosienPoistoNimike");
+        }
         #endregion
 
         #region OnNodeMouseClick
@@ -1297,15 +1289,14 @@ namespace InvaSAP
             Properties.Settings.Default.AsetuksetAvoimetTyotVariantti = tbAsetuksetVariantti.Text.Trim();
             Properties.Settings.Default.Save();
         }
-
         private void tbAsetuksetToimipaikka_TextChanged(object sender, EventArgs e)
         {
             Properties.Settings.Default.Toimipaikka = tbAsetuksetToimipaikka.Text.Trim();
             Properties.Settings.Default.Save();
         }
-        // Avaa laitepuun solmut myös klikkaamalla tekstiä eikä vain plussa-ikonia
         private void tbOpenWorkOrdersFunctionalLocation_TextChanged(object sender, EventArgs e)
         {
+            // Avaa laitepuun solmut myös klikkaamalla tekstiä eikä vain plussa-ikonia
             Properties.Settings.Default.OpenWorkOrdersFunctionalLocation = tbOpenWorkOrdersFunctionalLocation.Text.Trim();
             Properties.Settings.Default.Save();
         }
@@ -1349,6 +1340,41 @@ namespace InvaSAP
             Properties.Settings.Default.Toimintopaikkarajaus = txt;
             Properties.Settings.Default.Save();
             tbOpenWorkOrdersFunctionalLocation.Text = txt;
+        }
+        #endregion
+
+        #region Menus
+        private void toolStripMenuItemDeleteRow_Click(object sender, EventArgs e)
+        {
+            // Etsi poistettavat rivit valittujen solujen perusteella.
+
+            ToolStripMenuItem menuItem = (ToolStripMenuItem)sender;
+            ContextMenuStrip contextMenu = (ContextMenuStrip)menuItem.Owner;
+            Control sourceControl = contextMenu.SourceControl;
+
+            if (sourceControl is DataGridView dataGridView)
+            {
+                if (dataGridView.SelectedCells.Count > 0)
+                {
+                    HashSet<int> selectedRows = new();
+                    foreach (DataGridViewCell cell in dataGridView.SelectedCells)
+                    {
+                        selectedRows.Add(cell.RowIndex);
+                    }
+
+                    foreach (int rowIndex in selectedRows.OrderByDescending(i => i))
+                    {
+                        DataGridViewRow row = dataGridView.Rows[rowIndex];
+                        if (!row.IsNewRow)
+                        {
+                            if (dataGridView.IsCurrentRowDirty)
+                                dataGridView.CommitEdit(DataGridViewDataErrorContexts.Commit);
+
+                            dataGridView.Rows.Remove(row);
+                        }
+                    }
+                }
+            }
         }
         #endregion
 
