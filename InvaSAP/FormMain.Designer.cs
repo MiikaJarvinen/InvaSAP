@@ -100,6 +100,11 @@
             cbKirjaaPaivaHenkilo = new ComboBox();
             label32 = new Label();
             dgKirjaaPaiva = new DataGridView();
+            dgKirjaaPaivaTyonumero = new DataGridViewTextBoxColumn();
+            Tunnit = new DataGridViewTextBoxColumn();
+            Vahvistusteksti = new DataGridViewTextBoxColumn();
+            Loppuvahvistus = new DataGridViewCheckBoxColumn();
+            Toimintolaji = new DataGridViewComboBoxColumn();
             tabAvoimetTyot = new TabPage();
             splitContainerAvoimetTyot = new SplitContainer();
             dgOpenWorkOrders = new DataGridView();
@@ -151,11 +156,6 @@
             tbAsetuksetToimipaikka = new TextBox();
             tbLog = new TextBox();
             btnHaeLaitepuu = new Button();
-            dgKirjaaPaivaTyonumero = new DataGridViewTextBoxColumn();
-            Tunnit = new DataGridViewTextBoxColumn();
-            Vahvistusteksti = new DataGridViewTextBoxColumn();
-            Loppuvahvistus = new DataGridViewCheckBoxColumn();
-            Toimintolaji = new DataGridViewComboBoxColumn();
             tabControlMain.SuspendLayout();
             tabLuoTyotilaus.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)splitContainerLuoTyotilaus).BeginInit();
@@ -952,6 +952,36 @@
             dgKirjaaPaiva.CellValueChanged += dgKirjaaPaiva_CellValueChanged;
             dgKirjaaPaiva.RowsAdded += dgKirjaaPaiva_RowsAdded;
             // 
+            // dgKirjaaPaivaTyonumero
+            // 
+            dgKirjaaPaivaTyonumero.HeaderText = "Työnumero";
+            dgKirjaaPaivaTyonumero.Name = "dgKirjaaPaivaTyonumero";
+            // 
+            // Tunnit
+            // 
+            Tunnit.HeaderText = "Tuntimäärä";
+            Tunnit.MaxInputLength = 2;
+            Tunnit.Name = "Tunnit";
+            // 
+            // Vahvistusteksti
+            // 
+            Vahvistusteksti.AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
+            Vahvistusteksti.HeaderText = "Vahvistusteksti";
+            Vahvistusteksti.MaxInputLength = 40;
+            Vahvistusteksti.Name = "Vahvistusteksti";
+            // 
+            // Loppuvahvistus
+            // 
+            Loppuvahvistus.HeaderText = "Loppuvahvistus";
+            Loppuvahvistus.Name = "Loppuvahvistus";
+            // 
+            // Toimintolaji
+            // 
+            Toimintolaji.HeaderText = "Toimintolaji";
+            Toimintolaji.MinimumWidth = 130;
+            Toimintolaji.Name = "Toimintolaji";
+            Toimintolaji.Width = 130;
+            // 
             // tabAvoimetTyot
             // 
             tabAvoimetTyot.Controls.Add(splitContainerAvoimetTyot);
@@ -1513,36 +1543,6 @@
             btnHaeLaitepuu.Text = "Hae laitteet ja toimintopaikat SAPista";
             btnHaeLaitepuu.UseVisualStyleBackColor = true;
             btnHaeLaitepuu.Click += btnHaeLaitepuu_Click;
-            // 
-            // dgKirjaaPaivaTyonumero
-            // 
-            dgKirjaaPaivaTyonumero.HeaderText = "Työnumero";
-            dgKirjaaPaivaTyonumero.Name = "dgKirjaaPaivaTyonumero";
-            // 
-            // Tunnit
-            // 
-            Tunnit.HeaderText = "Tuntimäärä";
-            Tunnit.MaxInputLength = 2;
-            Tunnit.Name = "Tunnit";
-            // 
-            // Vahvistusteksti
-            // 
-            Vahvistusteksti.AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
-            Vahvistusteksti.HeaderText = "Vahvistusteksti";
-            Vahvistusteksti.MaxInputLength = 40;
-            Vahvistusteksti.Name = "Vahvistusteksti";
-            // 
-            // Loppuvahvistus
-            // 
-            Loppuvahvistus.HeaderText = "Loppuvahvistus";
-            Loppuvahvistus.Name = "Loppuvahvistus";
-            // 
-            // Toimintolaji
-            // 
-            Toimintolaji.HeaderText = "Toimintolaji";
-            Toimintolaji.MinimumWidth = 130;
-            Toimintolaji.Name = "Toimintolaji";
-            Toimintolaji.Width = 130;
             // 
             // FormMain
             // 

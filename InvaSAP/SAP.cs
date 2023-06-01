@@ -1,4 +1,6 @@
-﻿using SAPFEWSELib;
+﻿using Microsoft.VisualBasic.ApplicationServices;
+using Microsoft.Win32;
+using SAPFEWSELib;
 using SapROTWr;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
@@ -17,6 +19,27 @@ namespace InvaSAP
                 return false;
             else
                 return true;
+        }
+
+        public static string SearchInstallPath()
+        {
+            string registryPath = @"HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\SAP\SAP Shared";
+            string registryKey = "SAPsysdir";
+            string fileName = "saplogon.exe";
+            string defaultPath = @"C:\Program Files (x86)\SAP\FrontEnd\SAPgui\saplogon.exe";
+
+            if (File.Exists(defaultPath))
+                return defaultPath;
+
+            object? value = Registry.GetValue(registryPath, registryKey, null);
+            if (value != null)
+            {
+                string path = Path.Combine(value.ToString(), fileName);
+                if (File.Exists(path))
+                    return path;
+            }
+
+            throw new InvalidOperationException("SAP installation path was not found.");
         }
 
         private static GuiApplication? SapApplication { get; set; }
@@ -154,7 +177,8 @@ namespace InvaSAP
         // Lataa SAP Logon, jos ei vielä ole auki.
         private static void Load()
         {
-            string sapLogonPath = @"C:\Program Files (x86)\SAP\FrontEnd\SAPgui\saplogon.exe"; // TODO: Use Windows to find the path
+            //string sapLogonPath = @"C:\Program Files (x86)\SAP\FrontEnd\SAPgui\saplogon.exe"; // TODO: Use Windows to find the path
+            string sapLogonPath = SearchInstallPath();
 
             // Käynnistä SAP
             _ = new ProcessStartInfo(sapLogonPath)

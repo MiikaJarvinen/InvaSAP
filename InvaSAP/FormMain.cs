@@ -835,7 +835,7 @@ namespace InvaSAP
             SAP.SetTextBox("CORUF-AUFNR", tbTilausnumero.Text); // Tilausnumero
             SAP.SendVKey(0);
 
-            SAP.ToggleCheckbox("AFRUD-AUERU", checkBoxLoppuvahvistus.Checked);
+            SAP.ToggleCheckbox("AFRUD-AUERU", checkBoxLoppuvahvistus.Checked); // Loppuvahvistus
             SAP.SetTextBox("AFRUD-PERNR", cbHenkilo.SelectedValue.ToString()); // Henkilö
             int duration = (int)cbLopetusaika.SelectedItem - (int)cbAloitusaika.SelectedItem;
             SAP.SetTextField("AFRUD-ISMNW_2", duration.ToString()); // Toteutunut työ TODO: laske alotus ja lopetusajoista
@@ -1064,6 +1064,7 @@ namespace InvaSAP
         private void btnKirjaaPaiva_Click(object sender, EventArgs e)
         {
             // TODO: luo tuntimäärä -> kellonajat, ja muista mitkä on käytetty
+
         }
         private void btnOpenWorkOrdersRefresh_Click(object sender, EventArgs e)
         {
