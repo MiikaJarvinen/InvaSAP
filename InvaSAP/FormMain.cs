@@ -76,7 +76,7 @@ namespace InvaSAP
         }
         private void MoveAndResizeSapWindow()
         {
-            IntPtr windowHandle = FindWindow(null, SAP.GetActiveWindowName());
+            IntPtr windowHandle = FindWindow("", SAP.GetActiveWindowName());
             ShowWindow(windowHandle, SW_RESTORE);
             SetWindowPos(windowHandle, HWND_TOP, Left, Top, Width, Height, 0);
             SetForegroundWindow(windowHandle);
@@ -98,11 +98,22 @@ namespace InvaSAP
             public string DisplayText { get; set; }
             public int Value { get; set; }
 
-            public int CompareTo(UserItem other)
+            public UserItem()
             {
+                DisplayText = string.Empty;
+            }
+
+            public int CompareTo(UserItem? other)
+            {
+                if (other == null)
+                {
+                    return 1; // or -1 depending on your requirements
+                }
+
                 return string.Compare(DisplayText, other.DisplayText, StringComparison.OrdinalIgnoreCase);
             }
         }
+
 
         // Käytetään laitepuun laitteiden ja toimintopaikkojen kasaamisessa. Tarvitaan vain käyttöliittymän laitepuussa.
         public class MachineTreeNode
@@ -115,6 +126,10 @@ namespace InvaSAP
             public int? nodeLevel { get; set; } // SAP laitepuun taso
             public int? nodeParent { get; set; } // SAP laitepuun ylempi node
             public int? nodeType { get; set; } // 0 = laite, 1 = toimintopaikka, 2 = nimike
+            public MachineTreeNode()
+            {
+                id = string.Empty;
+            }
         };
         // Apufunktio laitepuusolmun luomiseen
         static MachineTreeNode CreateMachineTreeNode(string id, string name, string area, int nodeKey, int nodeLevel, int nodeParent, int nodeType)
@@ -157,9 +172,6 @@ namespace InvaSAP
             Jarjestelmatilat = JsonConvert.DeserializeObject<Dictionary<string, string>>(data["Jarjestelmatilat"].ToString() ?? string.Empty) ?? new Dictionary<string, string>();
             Kayttajat = JsonConvert.DeserializeObject<List<User>>(data["Kayttajat"].ToString() ?? string.Empty) ?? new List<User> { };
 
-            //AvoimetTyotVariantti = JsonConvert.DeserializeObject<dynamic>(json).AvoimetTyotVariantti.ToString() ?? "/KUPITIL";
-            //LaitehakuVariantti = JsonConvert.DeserializeObject<dynamic>(json).LaitehakuVariantti.ToString() ?? "/IDJAKUVAUS";
-            //Toimipaikka = JsonConvert.DeserializeObject<dynamic>(json).Toimipaikka.ToString() ?? "7010";
             dynamic? deserializedJson = JsonConvert.DeserializeObject<dynamic>(json);
             LaitehakuVariantti = deserializedJson?.LaitehakuVariantti?.ToString() ?? "/IDJAKUVAUS";
             AvoimetTyotVariantti = deserializedJson?.AvoimetTyotVariantti.ToString() ?? "/KUPITIL";
@@ -808,11 +820,14 @@ namespace InvaSAP
         // Kirjaa tunteja työtilaukselle
         private async void ConfirmWorkOrder(bool clearFormAfterSave = true)
         {
-            if (string.IsNullOrEmpty(cbHenkilo.Text))
-            {
-                MessageBox.Show("Henkilötieto puuttuu.", "Pakollinen arvo");
+            if (!IsControlValueEntered(tbTilausnumero, "Tilausnumero puuttuu.", "Pakollinen arvo"))
                 return;
-            }
+
+            if (!IsControlValueEntered(cbHenkilo, "Henkilötieto puuttuu.", "Pakollinen arvo"))
+                return;
+
+            if (!IsControlValueEntered(tbVahvistusteksti, "Vahvistusteksti puuttuu.", "Pakollinen arvo"))
+                return;
 
             int selectedHour = (int)cbAloitusaika.SelectedItem;
             if (cbLopetusaika.SelectedItem != null)
@@ -820,7 +835,16 @@ namespace InvaSAP
                 int selectedEndingTime = (int)cbLopetusaika.SelectedItem;
                 if (selectedHour >= selectedEndingTime)
                 {
-                    MessageBox.Show("Aloitusaika ei voi olla sama tai myöhemmin kuin lopetusaika. Tarkista syötetyt ajat.", "Virheellinen arvo");
+                    MessageBox.Show(@"Aloitusaika ei voi olla sama tai myöhemmin kuin lopetusaika.\nTarkista syötetyt ajat.", "Virheellinen arvo");
+                    return;
+                }
+            }
+
+            if (dgVaraosienPoisto.Rows.Count > 1)
+            {
+                if (!IsDataGridViewValid(dgVaraosienPoisto))
+                {
+                    MessageBox.Show("Varaosalistalta puuttuu tietoja.", "Puuttuva arvo");
                     return;
                 }
             }
@@ -836,11 +860,13 @@ namespace InvaSAP
             SAP.SendVKey(0);
 
             SAP.ToggleCheckbox("AFRUD-AUERU", checkBoxLoppuvahvistus.Checked); // Loppuvahvistus
-            SAP.SetTextBox("AFRUD-PERNR", cbHenkilo.SelectedValue.ToString()); // Henkilö
-            int duration = (int)cbLopetusaika.SelectedItem - (int)cbAloitusaika.SelectedItem;
-            SAP.SetTextField("AFRUD-ISMNW_2", duration.ToString()); // Toteutunut työ TODO: laske alotus ja lopetusajoista
+            SAP.SetTextBox("AFRUD-PERNR", cbHenkilo.SelectedValue?.ToString() ?? string.Empty); // Henkilö
+            int selectedAloitusaika = cbAloitusaika.SelectedItem as int? ?? 1;
+            int selectedLopetusaika = cbLopetusaika.SelectedItem as int? ?? 2;
+            int duration = selectedLopetusaika - selectedAloitusaika;
+            SAP.SetTextField("AFRUD-ISMNW_2", duration.ToString()); // Toteutunut työ
             SAP.SetTextBox("AFRUD-ISMNU", "H"); // Varmista, että aikayksikkö on tunti
-            SAP.SetTextBox("AFRUD-LEARR", cbKirjaaTuntejaToimintolaji.SelectedValue.ToString()); // Toimintolaji
+            SAP.SetTextBox("AFRUD-LEARR", cbKirjaaTuntejaToimintolaji.SelectedValue.ToString() ?? string.Empty); // Toimintolaji
             SAP.SetTextBox("AFRUD-ISDD", dtpPaiva.Value.ToString("dd.MM.yyyy")); // Aloituspäivä
             SAP.SetTextBox("AFRUD-IEDD", dtpPaiva.Value.ToString("dd.MM.yyyy")); // Lopetuspäivä
             SAP.SetTextBox("AFRUD-ISDZ", cbAloitusaika.Text); // Aloitusaika
@@ -1050,6 +1076,43 @@ namespace InvaSAP
             cbAloitusaika.DataSource = hoursAloitus;
             cbLopetusaika.DataSource = hoursLopetus;
         }
+        private static bool IsControlValueEntered(Control control, string errorMessage, string messageBoxTitle)
+        {
+            if (control is TextBox textBox && string.IsNullOrEmpty(textBox.Text))
+            {
+                MessageBox.Show(errorMessage, messageBoxTitle);
+                return false;
+            }
+
+            if (control is ComboBox comboBox && string.IsNullOrEmpty(comboBox.Text))
+            {
+                MessageBox.Show(errorMessage, messageBoxTitle);
+                return false;
+            }
+
+            return true;
+        }
+        private static bool IsDataGridViewValid(DataGridView dataGridView)
+        {
+            foreach (DataGridViewRow row in dataGridView.Rows)
+            {
+                if (!row.IsNewRow)
+                {
+                    foreach (DataGridViewCell cell in row.Cells)
+                    {
+                        Debug.WriteLine(cell.Value);
+                        if (string.IsNullOrEmpty(cell.Value?.ToString()))
+                        {
+                            return false;
+                        }
+                    }
+                }
+            }
+
+            return true;
+        }
+
+
         #endregion
 
         #region Buttons
