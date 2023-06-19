@@ -1,7 +1,9 @@
 ﻿using LiteDB;
+using Microsoft.VisualBasic;
 using Newtonsoft.Json;
 using SAPFEWSELib;
 using System.Diagnostics;
+using System.Globalization;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using System.Windows.Automation;
@@ -246,8 +248,7 @@ namespace InvaSAP
             // Täydennä tallennetut arvot ja vakioarvot Luo työtilaus-sivulle.
             tbIlmoittaja.Text = Properties.Settings.Default.Kayttaja;
             tbIlmoituslaji.Text = "Z1";
-            tbAlkupaiva.Text = DateTime.Today.AddDays(1).ToString("dd.MM.yyyy");
-            tbLoppupaiva.Text = DateTime.Today.AddDays(7).ToString("dd.MM.yyyy");
+            FillDatesOnCreateWorkOrder();
             tbAlkuaika.Text = "00:00:00";
             tbLoppuaika.Text = "00:00:00";
 
@@ -302,6 +303,12 @@ namespace InvaSAP
 
             // Aseta kursori valmiiksi laitehakukenttään, kun ohjelma avataan.
             cbLaitehaku.Select();
+        }
+
+        private void FillDatesOnCreateWorkOrder()
+        {
+            tbAlkupaiva.Text = DateTime.Today.AddDays(1).ToString("dd.MM.yyyy");
+            tbLoppupaiva.Text = DateTime.Today.AddDays(7).ToString("dd.MM.yyyy");
         }
 
         #region MachineTreeView
@@ -500,6 +507,10 @@ namespace InvaSAP
                 SAP.SetComboBox("VIQMEL-PRIOK", cbPrioriteetti.SelectedValue.ToString() ?? Prioriteetit.First().Key); // Prioriteetti
 
                 // Päivämäärät (alku ja loppu)
+                DateTime.TryParseExact(tbAlkupaiva.Text, "dd.MM.yyyy", null, DateTimeStyles.None, out DateTime date);
+                if (date.Date <= DateTime.Now.Date)
+                    FillDatesOnCreateWorkOrder();
+
                 SAP.SetTextBox("VIQMEL-STRMN", tbAlkupaiva.Text);
                 SAP.SetTextBox("VIQMEL-LTRMN", tbLoppupaiva.Text);
 
@@ -848,7 +859,7 @@ namespace InvaSAP
                     return;
                 }
             }
-
+            
             await SAP.Open();
 
             btnKirjaaTunnit.Enabled = false;
@@ -1133,9 +1144,9 @@ namespace InvaSAP
         {
             FetchOpenWorkOrders();
         }
-        private void btnLuo_Click(object sender, EventArgs e)
+        private async void btnLuo_Click(object sender, EventArgs e)
         {
-            CreateWorkOrder(false, true);
+            await CreateWorkOrder(false, true);
         }
         private async void btnLuoTyoJaVahvista_Click(object sender, EventArgs e)
         {
@@ -1151,9 +1162,9 @@ namespace InvaSAP
 
             tabControlMain.SelectedTab = tabKirjaaTunteja;
         }
-        private void btnLuoJaTulosta_Click(object sender, EventArgs e)
+        private async void btnLuoJaTulosta_Click(object sender, EventArgs e)
         {
-            CreateWorkOrder(true);
+            await CreateWorkOrder(true);
         }
         private void btnHaeLaitepuu_Click(object sender, EventArgs e)
         {
